@@ -5,7 +5,7 @@ import numpy as np
 df = pd.read_csv('Customer_Churn.csv')  # update filename if needed
 
 # -------------------------------
-# 1. Remove duplicate records
+# 1. Remove duplicate record
 # -------------------------------
 df.drop_duplicates(inplace=True)
 
