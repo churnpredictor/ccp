@@ -20,6 +20,5 @@ We use machine learning to predict whether a customer will churn based on servic
 - Encoded categorical variables
 - Converted target variable to binary
 
-## Team Lead
-Nandhakishore
+
 
