@@ -108,7 +108,7 @@ pie title Model Usage & Performance
 ### 1. Clone & Install
 Navigate into the directory and install all required python modules:
 ```bash
-git clone <repository-url>
+git clone https://github.com/churnpredictor/ccp.git
 cd churnnn
 pip install -r requirements.txt
 ```
