@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Churn Predictor — AI Dashboard</title>
+    <meta name="description" content="Production-level Customer Churn Prediction Dashboard with Explainable AI">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+</head>
+
+<body>
+
+    <div class="app">
+        <!-- ═══ SIDEBAR ═══ -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <span class="logo-icon">🎯</span>
+                    <span>Smart Churn<br>Predictor</span>
+                </div>
+                <div class="sidebar-subtitle">AI-Powered Analytics</div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-item active" data-page="home" onclick="navigateTo('home')">
+                    <span class="nav-icon">🏠</span> Dashboard
+                </div>
+                <div class="nav-item" data-page="history" onclick="navigateTo('history')">
+                    <span class="nav-icon">🔍</span> Customer History
+                </div>
+                <div class="nav-item" data-page="predict" onclick="navigateTo('predict')">
+                    <span class="nav-icon">🔮</span> Single Prediction
+                </div>
+                <div class="nav-item" data-page="bulk" onclick="navigateTo('bulk')">
+                    <span class="nav-icon">📂</span> Bulk Prediction
+                </div>
+                <div class="nav-item" data-page="analytics" onclick="navigateTo('analytics')">
+                    <span class="nav-icon">📊</span> Model Analytics
+                </div>
+                <div class="nav-item" data-page="dtree" onclick="navigateTo('dtree')">
+                    <span class="nav-icon">🌳</span> Decision Tree
+                </div>
+                <div class="nav-item" data-page="comparison" onclick="navigateTo('comparison')">
+                    <span class="nav-icon">⚖️</span> Model Comparison
+                </div>
+                <div class="nav-item" data-page="explainability" onclick="navigateTo('explainability')">
+                    <span class="nav-icon">🧠</span> Explainability
+                </div>
+                <div class="nav-item" data-page="monthly" onclick="navigateTo('monthly')">
+                    <span class="nav-icon">📅</span> Monthly Trends
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                Powered by ML & Explainable AI<br>
+                <span style="color: var(--accent-blue);">v2.0 — Flask Edition</span>
+            </div>
+        </aside>
+
+        <!-- ═══ MAIN CONTENT ═══ -->
+        <main class="main">
+
+            <!-- ═══════ HOME PAGE ═══════ -->
+            <section id="page-home" class="page-section active">
+                <div class="welcome-hero">
+                    <div class="welcome-title">Customer Churn Prediction System</div>
+                    <div class="welcome-desc">
+                        Advanced AI-powered analytics platform that predicts and prevents customer churn using
+                        state-of-the-art machine learning algorithms and SHAP-based explainable AI.
+                    </div>
+                </div>
+
+                <div class="kpi-grid" id="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-label">📋 Total Customers</div>
+                        <div class="kpi-value" id="kpi-total">—</div>
+                        <span class="kpi-icon">👥</span>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">✅ Active Customers</div>
+                        <div class="kpi-value" id="kpi-active">—</div>
+                        <span class="kpi-icon">💚</span>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">❌ Churned Customers</div>
+                        <div class="kpi-value" id="kpi-churned">—</div>
+                        <span class="kpi-icon">💔</span>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">🎯 Churn Rate</div>
+                        <div class="kpi-value" id="kpi-rate">—</div>
+                        <span class="kpi-icon">📊</span>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-bottom:24px;">
+                    <div class="card-title">🏆 Model Performance</div>
+                    <div class="table-container">
+                        <table id="home-performance-table">
+                            <thead>
+                                <tr>
+                                    <th>Model</th>
+                                    <th>Accuracy</th>
+                                    <th>Precision</th>
+                                    <th>Recall</th>
+                                    <th>F1 Score</th>
+                                    <th>AUC</th>
+                                </tr>
+                            </thead>
+                            <tbody id="home-perf-body"></tbody>
+                        </table>
+                    </div>
+                    <div id="home-best-model" style="margin-top:16px; color: var(--accent-green); font-weight:700;">
+                    </div>
+                </div>
+
+                <div class="grid-3">
+                    <div class="feature-card" onclick="navigateTo('predict')">
+                        <div class="feature-icon">🔮</div>
+                        <div class="feature-title">Single Prediction</div>
+                        <div class="feature-desc">Enter customer details and get instant churn probability with
+                            AI-explained reasons</div>
+                    </div>
+                    <div class="feature-card" onclick="navigateTo('bulk')">
+                        <div class="feature-icon">📂</div>
+                        <div class="feature-title">Bulk Prediction</div>
+                        <div class="feature-desc">Upload CSV files to process hundreds of customers at once</div>
+                    </div>
+                    <div class="feature-card" onclick="navigateTo('explainability')">
+                        <div class="feature-icon">🧠</div>
+                        <div class="feature-title">SHAP Explainability</div>
+                        <div class="feature-desc">Understand what drives predictions with SHAP analysis</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══════ CUSTOMER HISTORY ═══════ -->
+            <section id="page-history" class="page-section">
+                <div class="page-header">
+                    <div class="page-title">🔍 Customer History & Search</div>
+                    <div class="page-subtitle">Search for specific customers or view churned customers by date range
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-title">📅 Filter by Churn Date</div>
+                        <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:12px;">Select a date range
+                            to see customers who left within that period.</p>
+
+                        <div style="margin-bottom: 12px;">
+                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                                <input type="checkbox" id="enable-date-filter" checked onchange="toggleDateFilter()">
+                                <span>Enable Date Filter</span>
+                            </label>
+                        </div>
+
+                        <div class="grid-2" id="date-inputs-container">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label class="form-label">Start Date</label>
+                                <input type="date" class="form-input" id="history-start-date"
+                                    style="color-scheme:dark;">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label class="form-label">End Date</label>
+                                <input type="date" class="form-input" id="history-end-date" style="color-scheme:dark;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">🔎 Search Customer</div>
+                        <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:12px;">Search by Customer
+                            ID or Name (ignores date filter if used).</p>
+
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label class="form-label">Customer ID or Name</label>
+                            <input type="text" class="form-input" id="history-search-input"
+                                placeholder="e.g. 5575-GNVDE or John Doe">
+                        </div>
+
+                        <button class="btn btn-primary btn-full" onclick="loadCustomerHistory()">
+                            🔍 Analyze History
+                        </button>
+                    </div>
+                </div>
+
+                <div id="history-results" style="display:none; margin-top:24px;">
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-label">📝 Customers Found</div>
+                            <div class="kpi-value" id="hist-kpi-found" style="color:var(--accent-blue)">0</div>
+                            <span class="kpi-icon">👥</span>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">💰 Total Value (Spend)</div>
+                            <div class="kpi-value" id="hist-kpi-spend" style="color:var(--accent-green)">$0</div>
+                            <span class="kpi-icon">💵</span>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">💔 Churned in Period</div>
+                            <div class="kpi-value" id="hist-kpi-churned" style="color:var(--accent-red)">0</div>
+                            <span class="kpi-icon">📉</span>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">📋 Customer Details</div>
+                        <div class="table-container" style="max-height: 500px; overflow-y: auto;">
+                            <table id="history-table">
+                                <thead id="history-thead">
+                                    <!-- Dynamic headers -->
+                                </thead>
+                                <tbody id="history-tbody">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══════ SINGLE PREDICTION ═══════ -->
+            <section id="page-predict" class="page-section">
+                <div class="page-header">
+                    <div class="page-title">🔮 Single Customer Prediction</div>
+                    <div class="page-subtitle">Enter customer details to predict churn probability with AI-powered
+                        explanations</div>
+                </div>
+
+                <div class="card" style="margin-bottom:28px;">
+                    <div class="grid-3">
+                        <div>
+                            <div class="card-title">👤 Customer Profile</div>
+                            <div class="form-group">
+                                <label class="form-label">Age</label>
+                                <input type="range" id="inp-age" min="18" max="80" value="35"
+                                    oninput="document.getElementById('val-age').textContent=this.value">
+                                <span class="range-value" id="val-age">35</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Gender</label>
+                                <select class="form-select" id="inp-gender">
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Tenure (months)</label>
+                                <input type="range" id="inp-tenure" min="1" max="60" value="12"
+                                    oninput="document.getElementById('val-tenure').textContent=this.value">
+                                <span class="range-value" id="val-tenure">12</span>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="card-title">📊 Usage & Support</div>
+                            <div class="form-group">
+                                <label class="form-label">Usage Frequency (times/month)</label>
+                                <input type="range" id="inp-usage" min="1" max="30" value="15"
+                                    oninput="document.getElementById('val-usage').textContent=this.value">
+                                <span class="range-value" id="val-usage">15</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Support Calls</label>
+                                <input type="range" id="inp-support" min="0" max="10" value="2"
+                                    oninput="document.getElementById('val-support').textContent=this.value">
+                                <span class="range-value" id="val-support">2</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Payment Delay (days)</label>
+                                <input type="range" id="inp-delay" min="0" max="30" value="5"
+                                    oninput="document.getElementById('val-delay').textContent=this.value">
+                                <span class="range-value" id="val-delay">5</span>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="card-title">📋 Subscription</div>
+                            <div class="form-group">
+                                <label class="form-label">Subscription Type</label>
+                                <select class="form-select" id="inp-sub">
+                                    <option value="Basic">Basic</option>
+                                    <option value="Standard">Standard</option>
+                                    <option value="Premium">Premium</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Contract Length</label>
+                                <select class="form-select" id="inp-contract">
+                                    <option value="Monthly">Monthly</option>
+                                    <option value="Quarterly">Quarterly</option>
+                                    <option value="Annual">Annual</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Total Spend ($)</label>
+                                <input type="number" class="form-input" id="inp-spend" value="500" min="100" max="10000"
+                                    step="10">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Last Interaction (days ago)</label>
+                                <input type="range" id="inp-interaction" min="1" max="30" value="10"
+                                    oninput="document.getElementById('val-interaction').textContent=this.value">
+                                <span class="range-value" id="val-interaction">10</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-full" onclick="runPrediction()" style="margin-top:20px;">
+                        🎯 Predict Churn
+                    </button>
+                </div>
+
+                <div id="prediction-results" style="display:none;">
+                    <!-- Results populated by JS -->
+                </div>
+            </section>
+
+            <!-- ═══════ BULK PREDICTION ═══════ -->
+            <section id="page-bulk" class="page-section">
+                <div class="page-header">
+                    <div class="page-title">📂 Bulk Customer Prediction</div>
+                    <div class="page-subtitle">Upload a CSV file to predict churn for multiple customers at once</div>
+                </div>
+
+                <div class="card" style="margin-bottom:24px;">
+                    <div class="file-upload-zone" id="upload-zone"
+                        onclick="document.getElementById('csv-file').click()">
+                        <div class="upload-icon">📤</div>
+                        <div class="upload-text">Click to upload or drag & drop CSV file</div>
+                        <div class="upload-hint">Columns: Age, Gender, Tenure, Usage Frequency, Support Calls, Payment
+                            Delay, Subscription Type, Contract Length, Total Spend, Last Interaction</div>
+                        <input type="file" id="csv-file" accept=".csv" style="display:none"
+                            onchange="handleFileUpload(this)">
+                    </div>
+                    <div id="file-info" style="display:none; margin-top:16px;"></div>
+                    <button class="btn btn-primary btn-full" id="bulk-predict-btn"
+                        style="display:none; margin-top:16px;" onclick="runBulkPrediction()">
+                        🎯 Run Bulk Prediction
+                    </button>
+                </div>
+
+                <div id="bulk-results" style="display:none;"></div>
+            </section>
+
+            <!-- ═══════ MODEL ANALYTICS ═══════ -->
+            <section id="page-analytics" class="page-section">
+                <div class="page-header">
+                    <div class="page-title">📊 Model Analytics</div>
+                    <div class="page-subtitle">Comprehensive performance analysis of all trained models</div>
+                </div>
+
+                <div class="tab-bar">
+                    <button class="tab-btn active" onclick="showAnalyticsTab('confusion')">🎯 Confusion Matrix</button>
+                    <button class="tab-btn" onclick="showAnalyticsTab('roc')">📈 ROC Curves</button>
+                    <button class="tab-btn" onclick="showAnalyticsTab('metrics')">📊 Performance</button>
+                </div>
+
+                <div id="analytics-confusion" class="analytics-tab">
+                    <div class="grid-2" id="confusion-grid"></div>
+                </div>
+                <div id="analytics-roc" class="analytics-tab" style="display:none;">
+                    <div class="chart-container" id="roc-chart"></div>
+                </div>
+                <div id="analytics-metrics" class="analytics-tab" style="display:none;">
+                    <div class="chart-container" id="metrics-chart"></div>
+                </div>
+            </section>
+
+            <!-- ═══════ DECISION TREE ═══════ -->
+            <section id="page-dtree" class="page-section">
+                <div class="page-header">
+                    <div class="page-title">🌳 Decision Tree Prediction</div>
+                    <div class="page-subtitle">Visualize how the Decision Tree model makes its churn prediction
+                        step-by-step</div>
+                </div>
+
+                <div class="card" style="margin-bottom:28px;">
+                    <div class="grid-3">
+                        <div>
+                            <div class="card-title">👤 Customer Profile</div>
+                            <div class="form-group">
+                                <label class="form-label">Age</label>
+                                <input type="range" id="dt-age" min="18" max="80" value="35"
+                                    oninput="document.getElementById('dtval-age').textContent=this.value">
+                                <span class="range-value" id="dtval-age">35</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Gender</label>
+                                <select class="form-select" id="dt-gender">
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Tenure (months)</label>
+                                <input type="range" id="dt-tenure" min="1" max="60" value="12"
+                                    oninput="document.getElementById('dtval-tenure').textContent=this.value">
+                                <span class="range-value" id="dtval-tenure">12</span>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="card-title">📊 Usage & Support</div>
+                            <div class="form-group">
+                                <label class="form-label">Usage Frequency (times/month)</label>
+                                <input type="range" id="dt-usage" min="1" max="30" value="15"
+                                    oninput="document.getElementById('dtval-usage').textContent=this.value">
+                                <span class="range-value" id="dtval-usage">15</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Support Calls</label>
+                                <input type="range" id="dt-support" min="0" max="10" value="2"
+                                    oninput="document.getElementById('dtval-support').textContent=this.value">
+                                <span class="range-value" id="dtval-support">2</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Payment Delay (days)</label>
+                                <input type="range" id="dt-delay" min="0" max="30" value="5"
+                                    oninput="document.getElementById('dtval-delay').textContent=this.value">
+                                <span class="range-value" id="dtval-delay">5</span>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="card-title">📋 Subscription</div>
+                            <div class="form-group">
+                                <label class="form-label">Subscription Type</label>
+                                <select class="form-select" id="dt-sub">
+                                    <option value="Basic">Basic</option>
+                                    <option value="Standard">Standard</option>
+                                    <option value="Premium">Premium</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Contract Length</label>
+                                <select class="form-select" id="dt-contract">
+                                    <option value="Monthly">Monthly</option>
+                                    <option value="Quarterly">Quarterly</option>
+                                    <option value="Annual">Annual</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Total Spend ($)</label>
+                                <input type="number" class="form-input" id="dt-spend" value="500" min="100" max="10000"
+                                    step="10">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Last Interaction (days ago)</label>
+                                <input type="range" id="dt-interaction" min="1" max="30" value="10"
+                                    oninput="document.getElementById('dtval-interaction').textContent=this.value">
+                                <span class="range-value" id="dtval-interaction">10</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-full" onclick="runDTreePrediction()" style="margin-top:20px;">
+                        🌳 Predict with Decision Tree
+                    </button>
+                </div>
+
+                <div id="dtree-results" style="display:none;"></div>
+            </section>
+
+            <!-- ═══════ MODEL COMPARISON ═══════ -->
+            <section id="page-comparison" class="page-section">
+                <div class="page-header">
+                    <div class="page-title">⚖️ Model Comparison</div>
+                    <div class="page-subtitle">Side-by-side comparison of all trained models</div>
+                </div>
+
+                <div class="card" style="margin-bottom:24px;">
+                    <div class="card-title">📊 Performance Metrics</div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Model</th>
+                                    <th>Accuracy</th>
+                                    <th>Precision</th>
+                                    <th>Recall</th>
+                                    <th>F1 Score</th>
+                                    <th>AUC</th>
+                                </tr>
+                            </thead>
+                            <tbody id="comparison-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="chart-container" id="radar-chart" style="margin-bottom:24px;"></div>
+
+                <div class="grid-2" id="model-explanations">
+                    <div class="model-card">
+                        <div class="model-name">📘 Logistic Regression</div>
+                        <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:12px;">Simple linear
+                            baseline model. Fast training, interpretable coefficients, good for understanding linear
+                            relationships.</p>
+                        <div class="metric-row"><span class="metric-label">Type</span><span class="metric-value"
+                                style="color:var(--accent-blue);">Linear</span></div>
+                        <div class="metric-row"><span class="metric-label">Best For</span><span class="metric-value"
+                                style="color:var(--accent-cyan);">Baseline</span></div>
+                    </div>
+                    <div class="model-card">
+                        <div class="model-name">🌳 Decision Tree</div>
+                        <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:12px;">Rule-based model.
+                            Easy to visualize and explain. Handles non-linear relationships naturally.</p>
+                        <div class="metric-row"><span class="metric-label">Type</span><span class="metric-value"
+                                style="color:var(--accent-green);">Tree-Based</span></div>
+                        <div class="metric-row"><span class="metric-label">Best For</span><span class="metric-value"
+                                style="color:var(--accent-cyan);">Explainability</span></div>
+                    </div>
+                    <div class="model-card">
+                        <div class="model-name">🌲 Random Forest</div>
+                        <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:12px;">Ensemble of decision
+                            trees. Reduces overfitting, provides feature importance, robust and reliable.</p>
+                        <div class="metric-row"><span class="metric-label">Type</span><span class="metric-value"
+                                style="color:var(--accent-green);">Ensemble</span></div>
+                        <div class="metric-row"><span class="metric-label">Best For</span><span class="metric-value"
+                                style="color:var(--accent-orange);">Production</span></div>
+                    </div>
+                    <div class="model-card">
+                        <div class="model-name">🚀 XGBoost</div>
+                        <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:12px;">Gradient boosting
+                            algorithm. Highest accuracy, industry-standard, handles imbalanced data effectively.</p>
+                        <div class="metric-row"><span class="metric-label">Type</span><span class="metric-value"
+                                style="color:var(--accent-purple);">Boosting</span></div>
+                        <div class="metric-row"><span class="metric-label">Best For</span><span class="metric-value"
+                                style="color:var(--accent-red);">Max Accuracy</span></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══════ EXPLAINABILITY ═══════ -->
+            <section id="page-explainability" class="page-section">
+                <div class="page-header">
+                    <div class="page-title">🧠 SHAP Explainability</div>
+                    <div class="page-subtitle">Understand what drives churn predictions using SHAP values</div>
+                </div>
+
+                <div class="card"
+                    style="margin-bottom:24px; background: rgba(59,130,246,0.06); border-color: rgba(59,130,246,0.15);">
+                    <div style="display:flex;align-items:flex-start;gap:14px;">
+                        <span style="font-size:1.5rem;">💡</span>
+                        <div>
+                            <strong>SHAP (SHapley Additive exPlanations)</strong> is a game-theoretic approach to
+                            explain ML model outputs.
+                            It decompose each prediction into individual feature contributions, showing exactly how each
+                            feature
+                            pushes the prediction towards churn or retention.
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:20px;">
+                    <label class="form-label">Select Model</label>
+                    <select class="form-select" id="shap-model" onchange="loadExplainability()"
+                        style="max-width:300px;">
+                        <option value="Random Forest">Random Forest</option>
+                        <option value="XGBoost">XGBoost</option>
+                    </select>
+                </div>
+
+                <div id="shap-loading" style="display:none;">
+                    <div class="spinner"></div>
+                    <div class="loading-text">Calculating SHAP values... This may take a moment.</div>
+                </div>
+
+                <div id="shap-results" style="display:none;">
+                    <div class="chart-container" id="shap-chart" style="margin-bottom:24px;"></div>
+                    <div class="card" id="shap-insights"></div>
+                </div>
+            </section>
+
+            <!-- MONTHLY TRENDS -->
+            <section id="page-monthly" class="page-section">
+                <div class="page-header">
+                    <div class="page-title">📅 Monthly Churn Trends</div>
+                    <div class="page-subtitle">Analyze churn vs retained customers month by month — select a date range
+                        to explore</div>
+                </div>
+
+                <div class="card" style="margin-bottom:24px;">
+                    <div class="card-title">📆 Select Month Range</div>
+                    <div style="display:flex;gap:20px;align-items:flex-end;flex-wrap:wrap;">
+                        <div class="form-group" style="margin-bottom:0;flex:1;min-width:180px;">
+                            <label class="form-label">From Month</label>
+                            <input type="month" class="form-input" id="monthly-from" style="color-scheme:dark;">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;flex:1;min-width:180px;">
+                            <label class="form-label">To Month</label>
+                            <input type="month" class="form-input" id="monthly-to" style="color-scheme:dark;">
+                        </div>
+                        <button class="btn btn-primary" onclick="loadMonthlyChurn()"
+                            style="height:46px;min-width:160px;">
+                            📊 Show Trends
+                        </button>
+                    </div>
+                </div>
+
+                <div id="monthly-kpis" style="display:none;" class="grid-4"></div>
+
+                <div id="monthly-results" style="display:none;">
+                    <div class="chart-container" id="monthly-bar-chart" style="margin-bottom:24px;"></div>
+                    <div class="chart-container" id="monthly-rate-chart"></div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+
+</html>
