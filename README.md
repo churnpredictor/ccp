@@ -44,7 +44,7 @@ We use machine learning to predict whether a customer will churn based on servic
   - **Responsibilities**: Handles data collection, cleaning, and preprocessing. Prepares the dataset for modeling by handling missing values, encoding variables, and scaling.
 - **ML ENGINEER: Sethulakshmi S**
   - **Responsibilities**: Designs, trains, tests, and optimizes the machine learning models. Ensures high prediction accuracy and extracts explainable AI insights.
-- **DEPLOYMENT LEAD: Sethulakshmi S**
+- **DEPLOYMENT LEAD: Nandhakishore S**
   - **Responsibilities**: Manages the deployment of the machine learning models and the backend API into production, ensuring the application runs efficiently.
 - **QUALITY ANALYST: Shairaam R L**
   - **Responsibilities**: Tests the application for bugs, verifies prediction accuracy, ensures the dashboard is intuitive, and validates the entire pipeline against requirements.
