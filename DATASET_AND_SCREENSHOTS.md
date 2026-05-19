@@ -65,6 +65,7 @@ Upload a CSV file to run batch predictions across hundreds or thousands of custo
 ### 5. 📈 Model Analytics
 
 Deep-dive into ML model performance metrics — interactive ROC curves, confusion matrices, and feature importance rankings for all 4 trained models.
+<img width="1919" height="923" alt="Screenshot 2026-05-19 160951" src="https://github.com/user-attachments/assets/9937309e-db02-4ab8-8806-dd076cfb8e7a" />
 
 
 ---
@@ -73,7 +74,10 @@ Deep-dive into ML model performance metrics — interactive ROC curves, confusio
 
 View SHAP (SHapley Additive exPlanations) feature importance values for Random Forest and XGBoost, revealing which features drive churn predictions the most.
 
-![SHAP Explainability](static/screenshots/06_explainability.png)
+<img width="1919" height="984" alt="image" src="https://github.com/user-attachments/assets/3dc06ffd-965e-4a63-97e3-e56ee8434f1c" />
+<img width="1907" height="950" alt="image" src="https://github.com/user-attachments/assets/82518e5b-9ee2-4f37-a907-2ed662b7b139" />
+
+
 
 ---
 
@@ -81,7 +85,8 @@ View SHAP (SHapley Additive exPlanations) feature importance values for Random F
 
 Visualise exactly how the Decision Tree model makes its churn decision, step-by-step — with interactive sliders for each customer feature.
 
-![Decision Tree Prediction](static/screenshots/07_decision_tree.png)
+<img width="1919" height="931" alt="Screenshot 2026-05-19 161017" src="https://github.com/user-attachments/assets/9e76a743-a210-41a8-906a-238922f7ef2a" />
+
 
 ---
 
@@ -89,7 +94,11 @@ Visualise exactly how the Decision Tree model makes its churn decision, step-by-
 
 Side-by-side comparison of all 4 trained models using a radar chart spanning Accuracy, Precision, Recall, F1 Score, and AUC — plus individual model detail cards.
 
-![Model Comparison](static/screenshots/08_model_comparison.png)
+<img width="1919" height="1003" alt="image" src="https://github.com/user-attachments/assets/49951264-2a24-4a2a-b97e-daa3e2090b2a" />
+<img width="1919" height="982" alt="image" src="https://github.com/user-attachments/assets/a931c4c5-0ed9-4dd4-9320-71803b32519d" />
+<img width="1919" height="958" alt="image" src="https://github.com/user-attachments/assets/54405d6c-f104-4969-a772-05752d02db21" />
+
+
 
 ---
 
@@ -97,7 +106,12 @@ Side-by-side comparison of all 4 trained models using a radar chart spanning Acc
 
 Month-wise churn trend analysis from 2021 to 2026 — stacked bar charts showing churned vs. retained customers per month, plus a churn rate trend line.
 
-![Monthly Trends](static/screenshots/09_monthly_trends.png)
+<img width="1919" height="959" alt="image" src="https://github.com/user-attachments/assets/d88e5cef-0d82-42d5-b36b-1e22ae54f398" />
+<img width="1919" height="987" alt="image" src="https://github.com/user-attachments/assets/cd87e5a8-a10d-4cc9-9cc2-d7030012144e" />
+<img width="1910" height="963" alt="image" src="https://github.com/user-attachments/assets/1a53e075-26fa-46d9-8e71-40f7ca6942c8" />
+
+
+
 
 ---
 
