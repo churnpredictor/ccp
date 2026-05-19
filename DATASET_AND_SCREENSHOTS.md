@@ -25,7 +25,9 @@ The dataset used in this project is sourced from Kaggle and contains **440,833 c
 
 The main dashboard displays live KPIs: total customers, active vs. churned counts, overall churn rate, and a model performance comparison table.
 
-![Dashboard Overview](static/screenshots/01_dashboard.png)
+<img width="1917" height="969" alt="Screenshot 2026-05-19 160108" src="https://github.com/user-attachments/assets/443264fc-bb20-40a2-9f02-0402c0f747bb" />
+
+<img width="1910" height="922" alt="Screenshot 2026-05-19 160134" src="https://github.com/user-attachments/assets/03363879-93e3-4556-af9e-970f2c2747c4" />
 
 ---
 
@@ -33,15 +35,20 @@ The main dashboard displays live KPIs: total customers, active vs. churned count
 
 Search and browse churned customer records. Filter by date range or search by Customer ID / Name to retrieve full profiles.
 
-![Customer History](static/screenshots/02_customer_history.png)
+<img width="1919" height="963" alt="Screenshot 2026-05-19 160201" src="https://github.com/user-attachments/assets/a31bb867-ed15-4375-8634-fa2c873189fa" />
+<img width="1919" height="958" alt="Screenshot 2026-05-19 160332" src="https://github.com/user-attachments/assets/5a9a6b01-7db1-46cc-85f5-6e2a86cb609f" />
+
+
 
 ---
 
 ### 3. 🔮 Single Prediction
 
 Enter individual customer details to get a real-time churn probability score, risk level classification, and SHAP-powered explainability reasons.
+<img width="1919" height="976" alt="Screenshot 2026-05-19 160229" src="https://github.com/user-attachments/assets/914dad31-71ad-41da-8042-201db583cbc4" />
+<img width="1918" height="915" alt="Screenshot 2026-05-19 160504" src="https://github.com/user-attachments/assets/195e2daa-d01a-4b75-a2d7-c9654326db71" />
 
-![Single Prediction](static/screenshots/03_single_prediction.png)
+
 
 ---
 
@@ -49,7 +56,9 @@ Enter individual customer details to get a real-time churn probability score, ri
 
 Upload a CSV file to run batch predictions across hundreds or thousands of customers at once, with cohort risk distribution charts.
 
-![Bulk Prediction](static/screenshots/04_bulk_prediction.png)
+<img width="1919" height="962" alt="Screenshot 2026-05-19 160814" src="https://github.com/user-attachments/assets/6177f1ab-4d24-4a08-9fe3-f383bc35f588" />
+
+<img width="1919" height="970" alt="Screenshot 2026-05-19 160900" src="https://github.com/user-attachments/assets/133c38e1-ffa8-4a91-88ca-314176a775b1" />
 
 ---
 
@@ -57,7 +66,6 @@ Upload a CSV file to run batch predictions across hundreds or thousands of custo
 
 Deep-dive into ML model performance metrics — interactive ROC curves, confusion matrices, and feature importance rankings for all 4 trained models.
 
-![Model Analytics](static/screenshots/05_model_analytics.png)
 
 ---
 
