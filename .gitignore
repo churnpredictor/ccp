@@ -1,20 +1,19 @@
 # Python
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
+*$py.class
+*.so
 .Python
-*.egg
+env/
+venv/
+ENV/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.eggs/
 *.egg-info/
 dist/
 build/
-.eggs/
-
-# Virtual environments
-venv/
-env/
-.venv/
-.env/
 
 # IDE
 .vscode/
@@ -26,11 +25,9 @@ env/
 .DS_Store
 Thumbs.db
 
-# Reports (auto-generated)
+# Reports (generated at runtime)
 reports/*.pdf
+reports/*.html
+reports/*.png
 
-# Local logs
-*.log
-
-# Test files
-*.test.py
+# Don't ignore models, data, or static — needed for deployment
