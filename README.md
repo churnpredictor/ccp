@@ -1,14 +1,3 @@
----
-title: Telecom Customer Churn Predictor
-emoji: 🎯
-colorFrom: indigo
-colorTo: purple
-sdk: docker
-pinned: false
-license: mit
-short_description: ML-powered customer churn prediction dashboard with SHAP explainability
----
-
 # 🎯 Telecom Customer Churn Predictor (CCP)
 
 <div align="center">
