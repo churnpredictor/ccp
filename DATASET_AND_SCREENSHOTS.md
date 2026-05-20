@@ -1,4 +1,3 @@
-<img width="1918" height="975" alt="image" src="https://github.com/user-attachments/assets/b8f54bb5-8b1f-48c7-a281-1057b0dfae69" /># 📊 Dataset & Application Gallery
 
 ---
 
