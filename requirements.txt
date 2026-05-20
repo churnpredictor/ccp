@@ -13,3 +13,4 @@ openpyxl
 joblib
 Pillow
 kaleido
+python-dateutil

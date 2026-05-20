@@ -177,46 +177,47 @@ def get_shap_reasons(input_processed, raw_values):
 
     reason_templates = {
         'Tenure': {
-            'churn': "Short Tenure ({val} months) — Newer customers are more likely to leave as they haven't built loyalty yet.",
-            'stay': "Long Tenure ({val} months) — Long-term customer indicating strong brand loyalty."
+            'churn': "Short Tenure ({val} months) — This customer has only been with us for {val} months. New customers haven't yet experienced the full value of our service and are more likely to explore alternatives before committing long-term.",
+            'stay': "Long Tenure ({val} months) — This customer has been loyal for {val} months, indicating strong brand commitment and high switching costs. Long-term customers rarely churn without a major negative event."
         },
         'Support Calls': {
-            'churn': "High Support Calls ({val}) — Frequent support calls suggest dissatisfaction with the service.",
-            'stay': "Low Support Calls ({val}) — Few support calls indicate customer satisfaction."
+            'churn': "High Support Calls ({val} calls) — This customer contacted support {val} times, signalling repeated unresolved issues, service dissatisfaction, or friction with the product. Customers who repeatedly seek help without resolution are very likely to leave.",
+            'stay': "Low Support Calls ({val} calls) — Only {val} support contacts indicates the customer is largely self-sufficient and satisfied with the service quality, reducing churn risk."
         },
         'Payment Delay': {
-            'churn': "Payment Delays ({val} days) — Late payments may indicate disengagement or billing issues.",
-            'stay': "Timely Payments ({val} days delay) — Consistent payments show commitment."
+            'churn': "Frequent Payment Delays ({val} days) — Payments are delayed by an average of {val} days. Chronic late payments suggest disengagement, dissatisfaction with perceived value for money, or financial friction — all strong churn signals.",
+            'stay': "On-Time Payments ({val} day delay) — Consistently paying on time ({val}-day delay) demonstrates financial commitment and satisfaction with the pricing and value received."
         },
         'Usage Frequency': {
-            'churn': "Low Usage ({val} times/month) — Low engagement increases churn risk.",
-            'stay': "High Usage ({val} times/month) — Active usage shows the customer finds value."
+            'churn': "Low Usage Frequency ({val} times/month) — The customer only uses the service {val} times per month, well below the engaged-user average. Low engagement means they are not getting value from their subscription, making cancellation very likely.",
+            'stay': "High Usage Frequency ({val} times/month) — Using the service {val} times per month shows the customer is actively getting value from their subscription — a key retention driver."
         },
         'Total Spend': {
-            'churn': "Low Total Spend (${val}) — Lower spending may indicate the customer is not invested.",
-            'stay': "High Total Spend (${val}) — Higher spending indicates strong commitment."
+            'churn': "Low Total Spend (${val}) — Lifetime spend of ${val} is below average, suggesting the customer may be on a lower-tier plan, hasn't upgraded, or doesn't perceive the service worth the cost. Price-sensitive low-spenders churn more frequently.",
+            'stay': "High Total Spend (${val}) — With a total spend of ${val}, this customer represents significant revenue and is deeply invested in the service. High spenders rarely churn without a compelling reason."
         },
         'Contract Length': {
-            'churn': "{val} Contract — Shorter contracts make it easier to leave.",
-            'stay': "{val} Contract — Longer contracts provide stability and reduce churn."
+            'churn': "{val} Contract — A {val} contract provides very little lock-in. The customer can easily cancel at any time without financial penalty, making them much more susceptible to competitor offers or minor dissatisfaction.",
+            'stay': "{val} Contract — A {val} contract creates a strong financial commitment to stay. Customers on annual or longer contracts have agreed to a substantial term and rarely cancel mid-contract."
         },
         'Last Interaction': {
-            'churn': "Recent Interaction ({val} days ago) — Recent contact may indicate unresolved problems.",
-            'stay': "Last Interaction ({val} days ago) — No recent issues reported."
+            'churn': "Recent Support Interaction ({val} days ago) — The customer contacted us just {val} days ago. Frequent recent interactions may indicate an ongoing unresolved issue, frustration, or active consideration of cancellation.",
+            'stay': "No Recent Issues ({val} days since last contact) — {val} days without contacting support suggests the customer is trouble-free and satisfied with the current service experience."
         },
         'Subscription Type': {
-            'churn': "{val} Plan — This plan tier shows higher churn rates.",
-            'stay': "{val} Plan — This plan tier shows better retention."
+            'churn': "{val} Subscription Plan — The {val} plan tier has historically shown higher churn rates. Customers on lower-tier plans often feel they are not getting enough premium features for their cost, or find it easy to downgrade and cancel.",
+            'stay': "{val} Subscription Plan — Customers on the {val} plan tend to have strong retention. This plan provides a good balance of features and cost that satisfies most customer needs."
         },
         'Age': {
-            'churn': "Age ({val}) — This age group shows higher churn tendency historically.",
-            'stay': "Age ({val}) — This age group tends to be more stable."
+            'churn': "Age Group ({val}) — Customers in this age range ({val}) tend to be more digitally mobile and willing to switch services when a better offer appears. They are more price-sensitive and comparison-driven.",
+            'stay': "Age Group ({val}) — Customers aged {val} in this demographic tend to value stability and long-term relationships with service providers, making them less likely to churn."
         },
         'Gender': {
-            'churn': "Gender ({val}) — This demographic shows slightly higher churn.",
-            'stay': "Gender ({val}) — This demographic shows stable retention."
+            'churn': "Customer Demographics (Gender: {val}) — Based on historical patterns, this demographic shows slightly elevated churn tendency at this subscription tier.",
+            'stay': "Customer Demographics (Gender: {val}) — This demographic group shows stable retention patterns at this service level."
         }
     }
+
 
     churn_reasons = []
     stay_reasons = []
@@ -347,6 +348,84 @@ def customer_history():
         # Only send top 1000 to prevent browser crash
         'data': df[final_cols].head(1000).to_dict(orient='records')
     })
+
+
+@app.route('/api/customer_detail', methods=['GET'])
+def customer_detail():
+    """Return full rich detail for a single customer matched by name or ID."""
+    if dataset is None:
+        return jsonify({'error': 'Dataset not loaded'}), 500
+
+    query = request.args.get('search', '').strip().lower()
+    if not query:
+        return jsonify({'error': 'No search query provided'}), 400
+
+    df = dataset.copy()
+    id_col = next((col for col in ['CustomerID', 'customerID', 'customer_id', 'ID', 'id'] if col in df.columns), None)
+
+    mask = pd.Series(False, index=df.index)
+    if id_col:
+        mask = mask | (df[id_col].astype(str).str.lower() == query)
+    if 'Customer Name' in df.columns:
+        mask = mask | (df['Customer Name'].astype(str).str.lower() == query)
+
+    # Fall back to partial match if exact gives nothing
+    if mask.sum() == 0:
+        if id_col:
+            mask = mask | df[id_col].astype(str).str.lower().str.contains(query, na=False)
+        if 'Customer Name' in df.columns:
+            mask = mask | df['Customer Name'].astype(str).str.lower().str.contains(query, na=False)
+
+    matched = df[mask]
+    if matched.empty:
+        return jsonify({'error': 'No customer found matching that search.'}), 404
+
+    # Use first match
+    row = matched.iloc[0]
+
+    numeric_cols = ['Tenure', 'Total Spend', 'Usage Frequency', 'Support Calls', 'Payment Delay', 'Age', 'Last Interaction']
+    existing_numeric = [c for c in numeric_cols if c in df.columns]
+
+    # Comparison stats: customer value vs dataset average
+    comparison = {}
+    for col in existing_numeric:
+        try:
+            avg = float(df[col].mean())
+            customer_val = float(row[col]) if pd.notna(row.get(col)) else 0
+            comparison[col] = {
+                'customer': round(customer_val, 2),
+                'average': round(avg, 2)
+            }
+        except Exception:
+            pass
+
+    # Churn status
+    churn_val = row.get('Churn', 0)
+    if isinstance(churn_val, str):
+        is_churned = churn_val.lower() in ['yes', '1', 'true']
+    else:
+        is_churned = bool(churn_val)
+
+    churn_date = str(row.get('Churn Date', '')) if pd.notna(row.get('Churn Date')) else None
+
+    # All fields for the profile card
+    profile = {}
+    for col in df.columns:
+        val = row.get(col)
+        if pd.isna(val) if isinstance(val, float) else val is None:
+            profile[col] = None
+        else:
+            profile[col] = str(val) if not isinstance(val, (int, float, bool)) else val
+
+    return jsonify({
+        'found': True,
+        'profile': profile,
+        'is_churned': is_churned,
+        'churn_date': churn_date,
+        'comparison': comparison,
+        'total_customers_in_db': len(df)
+    })
+
 
 
 @app.route('/api/dashboard')

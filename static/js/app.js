@@ -76,6 +76,32 @@ function animateNumber(id, target) {
     requestAnimationFrame(update);
 }
 
+// ─── Single Prediction — Identity & Lock Logic ──────────────
+function confirmCustomerIdentity() {
+    const custId = document.getElementById('inp-cust-id').value.trim();
+    const custName = document.getElementById('inp-cust-name').value.trim();
+
+    if (!custId || !custName) {
+        alert('Please enter both Customer ID and Customer Name before confirming.');
+        return;
+    }
+
+    // Lock identity fields
+    document.getElementById('inp-cust-id').disabled = true;
+    document.getElementById('inp-cust-name').disabled = true;
+    document.getElementById('confirm-identity-btn').disabled = true;
+    document.getElementById('confirm-identity-btn').style.opacity = '0.5';
+
+    // Show locked banner
+    document.getElementById('identity-display').textContent = `${custName} (ID: ${custId})`;
+    document.getElementById('identity-locked-banner').style.display = 'block';
+
+    // Enable the data card
+    const dataCard = document.getElementById('customer-data-card');
+    dataCard.style.opacity = '1';
+    dataCard.style.pointerEvents = 'auto';
+}
+
 // ─── Single Prediction ──────────────────────────────────────
 async function runPrediction() {
     const payload = {
@@ -102,76 +128,182 @@ async function runPrediction() {
             body: JSON.stringify(payload)
         });
         const data = await res.json();
+
+        // Lock all data fields after prediction
+        lockDataFields();
+
         renderPredictionResults(data);
+
+        // Show the "Add Another Customer" button
+        document.getElementById('add-another-btn-container').style.display = 'block';
     } catch (e) {
         container.innerHTML = `<div class="result-banner churn"><span class="banner-icon">❌</span> Error: ${e.message}</div>`;
     }
 }
+
+function lockDataFields() {
+    const fieldsToLock = [
+        'inp-age', 'inp-gender', 'inp-tenure', 'inp-usage',
+        'inp-support', 'inp-delay', 'inp-sub', 'inp-contract',
+        'inp-spend', 'inp-interaction'
+    ];
+    fieldsToLock.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = true;
+    });
+    document.getElementById('fields-locked-badge').style.display = 'block';
+}
+
+function resetForNewCustomer() {
+    // Unlock and clear identity fields
+    document.getElementById('inp-cust-id').value = '';
+    document.getElementById('inp-cust-name').value = '';
+    document.getElementById('inp-cust-id').disabled = false;
+    document.getElementById('inp-cust-name').disabled = false;
+    document.getElementById('confirm-identity-btn').disabled = false;
+    document.getElementById('confirm-identity-btn').style.opacity = '1';
+    document.getElementById('identity-locked-banner').style.display = 'none';
+    document.getElementById('identity-display').textContent = '';
+
+    // Unlock and reset all data fields to default values
+    const defaults = {
+        'inp-age': 35, 'inp-tenure': 12, 'inp-usage': 15,
+        'inp-support': 2, 'inp-delay': 5, 'inp-interaction': 10, 'inp-spend': 500
+    };
+    Object.entries(defaults).forEach(([id, val]) => {
+        const el = document.getElementById(id);
+        if (el) { el.value = val; el.disabled = false; }
+    });
+
+    ['inp-gender', 'inp-sub', 'inp-contract'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.selectedIndex = 0; el.disabled = false; }
+    });
+
+    document.getElementById('fields-locked-badge').style.display = 'none';
+
+    // Grey out data card again until identity is confirmed
+    const dataCard = document.getElementById('customer-data-card');
+    dataCard.style.opacity = '0.45';
+    dataCard.style.pointerEvents = 'none';
+
+    // Hide results and reset button
+    document.getElementById('prediction-results').style.display = 'none';
+    document.getElementById('prediction-results').innerHTML = '';
+    document.getElementById('add-another-btn-container').style.display = 'none';
+
+    // Scroll to top of predict section
+    document.getElementById('page-predict').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+
 
 function renderPredictionResults(data) {
     const container = document.getElementById('prediction-results');
     const isChurn = data.prediction === 1;
     const prob = (data.probability * 100).toFixed(1);
     const reasons = data.reasons || {};
+    const cd = data.customer_data || {};
+
+    // --- Make container visible FIRST so Plotly can get real dimensions ---
+    container.style.display = 'block';
 
     let html = '';
 
-    // Banner
-    html += `<div class="result-banner ${isChurn ? 'churn' : 'safe'}">
+    // ── Alert Banner ──────────────────────────────────────────
+    html += `<div class="result-banner ${isChurn ? 'churn' : 'safe'}" style="margin-bottom:20px;">
         <span class="banner-icon">${isChurn ? '⚠️' : '✅'}</span>
-        <div>
-            <strong>${isChurn ? 'HIGH ALERT: Customer is likely to CHURN' : 'SAFE: Customer is likely to STAY'}</strong>
-            <div style="font-size:0.9rem;opacity:0.8;margin-top:4px;">
-                Churn Probability: ${prob}% | Risk Level: ${data.risk_level}
+        <div style="flex:1;">
+            <strong style="font-size:1.1rem;">${isChurn ? '🚨 HIGH ALERT: This customer is likely to CHURN' : '✅ SAFE: This customer is likely to STAY'}</strong>
+            <div style="font-size:0.9rem;opacity:0.85;margin-top:6px;display:flex;gap:24px;flex-wrap:wrap;">
+                <span>📊 Churn Probability: <strong>${prob}%</strong></span>
+                <span>🎯 Risk Level: <strong>${data.risk_level}</strong></span>
+                <span>📋 Subscription: <strong>${cd['Subscription Type'] || '—'}</strong></span>
+                <span>📜 Contract: <strong>${cd['Contract Length'] || '—'}</strong></span>
+                <span>⏱ Tenure: <strong>${cd['Tenure'] || '—'} months</strong></span>
             </div>
         </div>
     </div>`;
 
-    // Gauge + Distribution charts
-    html += `<div class="grid-2">
-        <div class="chart-container" id="gauge-chart"></div>
-        <div class="chart-container" id="dist-chart"></div>
+    // ── Gauge + Distribution charts ───────────────────────────
+    html += `<div class="grid-2" style="margin-bottom:24px;">
+        <div class="chart-container" id="gauge-chart" style="min-height:320px;"></div>
+        <div class="chart-container" id="dist-chart" style="min-height:320px;"></div>
     </div>`;
 
-    // Churn Reasons Section
-    html += `<div class="card" style="margin-bottom:24px;">
-        <div class="card-title">🔍 Why This Customer Will ${isChurn ? 'Churn' : 'Stay'}</div>
+    // ── Explanation: Why Will This Customer Churn / Stay ─────
+    const churnReasons = reasons.churn_reasons || [];
+    const stayReasons = reasons.stay_reasons || [];
+
+    const iconMap = {
+        'Tenure': '⏱', 'Support Calls': '📞', 'Payment Delay': '💳',
+        'Usage Frequency': '📱', 'Total Spend': '💰', 'Contract Length': '📜',
+        'Last Interaction': '🕐', 'Subscription Type': '📦', 'Age': '👤', 'Gender': '🧑'
+    };
+
+    html += `<div class="card" style="margin-bottom:24px;border:1px solid ${isChurn ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)'};">
+        <div class="card-title" style="font-size:1.15rem;">🔍 Why This Customer Will ${isChurn ? 'Churn' : 'Stay'} — Detailed Analysis</div>
+        <p style="color:var(--text-secondary);font-size:0.88rem;margin-bottom:20px;line-height:1.6;">
+            The AI analysed <strong>${Object.keys(iconMap).length}</strong> customer behavioural and financial factors. Below are the key drivers ranked by impact on the prediction.
+        </p>
         <div class="grid-2">
             <div>
-                <h4 style="color:${COLORS.red};margin-bottom:14px;">⚠️ Risk Factors</h4>
-                ${(reasons.churn_reasons || []).length > 0
-            ? reasons.churn_reasons.map(r => `<div class="reason-card risk">
-                        <span class="reason-icon">⚠️</span>
-                        <div class="reason-text"><strong>${r.feature}:</strong> ${r.reason}</div>
-                    </div>`).join('')
-            : '<div style="color:var(--text-muted);padding:12px;">No significant risk factors detected ✨</div>'
+                <div style="font-size:0.95rem;font-weight:700;color:${COLORS.red};margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid rgba(239,68,68,0.2);">
+                    ⚠️ Churn Risk Factors
+                </div>
+                ${churnReasons.length > 0
+            ? churnReasons.map(r => `
+                        <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px;padding:14px;margin-bottom:12px;">
+                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                                <span style="font-size:1.2rem;">${iconMap[r.feature] || '🔹'}</span>
+                                <strong style="color:var(--accent-red);font-size:0.95rem;">${r.feature}</strong>
+                                <span style="margin-left:auto;font-size:0.75rem;background:rgba(239,68,68,0.2);color:var(--accent-red);padding:2px 8px;border-radius:20px;font-weight:700;">impact: ${(r.impact * 100).toFixed(1)}%</span>
+                            </div>
+                            <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.65;margin:0;">${r.reason}</p>
+                        </div>`).join('')
+            : `<div style="color:var(--text-muted);padding:16px;text-align:center;background:rgba(16,185,129,0.05);border-radius:10px;">✨ No significant risk factors detected</div>`
         }
             </div>
             <div>
-                <h4 style="color:${COLORS.green};margin-bottom:14px;">✅ Retention Factors</h4>
-                ${(reasons.stay_reasons || []).length > 0
-            ? reasons.stay_reasons.map(r => `<div class="reason-card safe">
-                        <span class="reason-icon">✅</span>
-                        <div class="reason-text"><strong>${r.feature}:</strong> ${r.reason}</div>
-                    </div>`).join('')
-            : '<div style="color:var(--text-muted);padding:12px;">No strong retention factors ⚠️</div>'
+                <div style="font-size:0.95rem;font-weight:700;color:${COLORS.green};margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid rgba(16,185,129,0.2);">
+                    ✅ Retention / Loyalty Factors
+                </div>
+                ${stayReasons.length > 0
+            ? stayReasons.map(r => `
+                        <div style="background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.15);border-radius:12px;padding:14px;margin-bottom:12px;">
+                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                                <span style="font-size:1.2rem;">${iconMap[r.feature] || '🔹'}</span>
+                                <strong style="color:var(--accent-green);font-size:0.95rem;">${r.feature}</strong>
+                                <span style="margin-left:auto;font-size:0.75rem;background:rgba(16,185,129,0.2);color:var(--accent-green);padding:2px 8px;border-radius:20px;font-weight:700;">impact: ${(r.impact * 100).toFixed(1)}%</span>
+                            </div>
+                            <p style="color:var(--text-secondary);font-size:0.875rem;line-height:1.65;margin:0;">${r.reason}</p>
+                        </div>`).join('')
+            : `<div style="color:var(--text-muted);padding:16px;text-align:center;background:rgba(239,68,68,0.05);border-radius:10px;">⚠️ No strong retention factors found</div>`
         }
             </div>
         </div>
     </div>`;
 
-    // Feature Impact Chart
-    html += `<div class="chart-container" id="impact-chart" style="margin-bottom:24px;"></div>`;
+    // ── Feature Impact Chart ──────────────────────────────────
+    html += `<div class="chart-container" id="impact-chart" style="margin-bottom:24px;min-height:380px;"></div>`;
 
-    // Recommendations
-    html += `<div class="card" style="margin-bottom:24px;">
-        <div class="card-title">💡 Actionable Recommendations</div>
-        ${(reasons.recommendations || []).map(r => `<div class="recommendation">
-            <span>💡</span><span>${r}</span>
-        </div>`).join('')}
-    </div>`;
+    // ── Actionable Recommendations ────────────────────────────
+    const recs = reasons.recommendations || [];
+    if (recs.length) {
+        html += `<div class="card" style="margin-bottom:24px;border:1px solid rgba(99,102,241,0.2);">
+            <div class="card-title">💡 Actionable Retention Recommendations</div>
+            <p style="color:var(--text-secondary);font-size:0.88rem;margin-bottom:16px;">Based on the identified risk factors, here are targeted strategies to reduce churn probability:</p>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+            ${recs.map((r, i) => `
+                <div style="display:flex;gap:14px;align-items:flex-start;background:rgba(99,102,241,0.06);border-radius:10px;padding:14px;border:1px solid rgba(99,102,241,0.12);">
+                    <span style="background:rgba(99,102,241,0.2);color:var(--accent-purple);width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.85rem;flex-shrink:0;">${i + 1}</span>
+                    <span style="color:var(--text-primary);font-size:0.9rem;line-height:1.6;">${r}</span>
+                </div>`).join('')}
+            </div>
+        </div>`;
+    }
 
-    // All Models Comparison
+    // ── All Models Prediction Table ───────────────────────────
     html += `<div class="card" style="margin-bottom:24px;">
         <div class="card-title">⚖️ All Model Predictions</div>
         <div class="table-container"><table>
@@ -186,19 +318,25 @@ function renderPredictionResults(data) {
         </table></div>
     </div>`;
 
-    // Feature Importance
-    html += `<div class="chart-container" id="fi-chart" style="margin-bottom:24px;"></div>`;
+    // ── Feature Importance ────────────────────────────────────
+    html += `<div class="chart-container" id="fi-chart" style="margin-bottom:24px;min-height:380px;"></div>`;
 
     container.innerHTML = html;
 
-    // Render charts after HTML is inserted
-    setTimeout(() => {
-        renderGaugeChart(data.probability, data.risk_level);
-        renderDistChart(data.probability);
-        renderImpactChart(reasons.feature_impacts || []);
-        renderFeatureImportance(data.feature_importance);
-    }, 100);
+    // ── Render Plotly charts: use requestAnimationFrame + delay ──
+    // Two frames ensures the browser has laid out & painted the elements
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                try { renderGaugeChart(data.probability, data.risk_level); } catch (e) { console.error('GaugeChart error', e); }
+                try { renderDistChart(data.probability); } catch (e) { console.error('DistChart error', e); }
+                try { renderImpactChart(reasons.feature_impacts || []); } catch (e) { console.error('ImpactChart error', e); }
+                try { renderFeatureImportance(data.feature_importance); } catch (e) { console.error('FIChart error', e); }
+            }, 150);
+        });
+    });
 }
+
 
 function renderGaugeChart(prob, riskLevel) {
     const color = prob < 0.4 ? COLORS.green : prob < 0.75 ? COLORS.orange : COLORS.red;
@@ -300,6 +438,180 @@ function toggleDateFilter() {
         else input.style.opacity = '1';
     });
 }
+
+// ── Per-Customer Detail Search ──────────────────────────────
+async function searchCustomerDetail() {
+    const query = document.getElementById('history-search-input').value.trim();
+    if (!query) { alert('Please enter a Customer ID or Name.'); return; }
+
+    // Hide previous results
+    document.getElementById('history-results').style.display = 'none';
+    const panel = document.getElementById('customer-detail-panel');
+    panel.style.display = 'block';
+    panel.innerHTML = '<div class="spinner"></div><div class="loading-text">Loading customer profile...</div>';
+
+    try {
+        const res = await fetch(`/api/customer_detail?search=${encodeURIComponent(query)}`);
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+            panel.innerHTML = `<div class="result-banner churn"><span class="banner-icon">❌</span> ${data.error || 'Customer not found.'}</div>`;
+            return;
+        }
+
+        renderCustomerDetail(data);
+    } catch (e) {
+        panel.innerHTML = `<div class="result-banner churn"><span class="banner-icon">❌</span> Error: ${e.message}</div>`;
+    }
+}
+
+function renderCustomerDetail(data) {
+    const panel = document.getElementById('customer-detail-panel');
+    const p = data.profile;
+    const cmp = data.comparison;
+
+    // Restore the panel structure
+    panel.innerHTML = `
+        <div id="customer-profile-banner" class="card" style="margin-bottom:20px;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:0;right:0;width:300px;height:100%;background:linear-gradient(135deg,transparent,rgba(99,102,241,0.07));pointer-events:none;"></div>
+            <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+                <div id="customer-avatar" style="width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:800;flex-shrink:0;"></div>
+                <div style="flex:1;">
+                    <div style="font-size:1.5rem;font-weight:800;" id="detail-name">—</div>
+                    <div style="color:var(--text-secondary);font-size:0.9rem;margin-top:2px;" id="detail-id">—</div>
+                    <div style="margin-top:8px;display:flex;gap:10px;flex-wrap:wrap;">
+                        <span id="detail-churn-badge"></span>
+                        <span id="detail-subscription-badge" style="padding:4px 12px;border-radius:20px;font-size:0.8rem;font-weight:700;background:rgba(59,130,246,0.15);color:var(--accent-blue);border:1px solid rgba(59,130,246,0.3);"></span>
+                        <span id="detail-contract-badge" style="padding:4px 12px;border-radius:20px;font-size:0.8rem;font-weight:700;background:rgba(6,182,212,0.15);color:var(--accent-cyan);border:1px solid rgba(6,182,212,0.3);"></span>
+                    </div>
+                </div>
+                <div class="grid-2" style="gap:16px;min-width:280px;" id="detail-kpis"></div>
+            </div>
+        </div>
+        <div class="grid-2" style="margin-bottom:20px;">
+            <div class="chart-container" id="hist-comparison-chart"></div>
+            <div class="chart-container" id="hist-radar-chart"></div>
+        </div>
+        <div class="card">
+            <div class="card-title">📋 Full Customer Record</div>
+            <div class="table-container">
+                <table id="detail-fields-table">
+                    <thead><tr><th>Field</th><th>Value</th></tr></thead>
+                    <tbody id="detail-fields-body"></tbody>
+                </table>
+            </div>
+        </div>`;
+
+    const isChurned = data.is_churned;
+    const name = p['Customer Name'] || 'Unknown';
+    const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    const avatarColors = isChurned
+        ? 'background:rgba(239,68,68,0.2);color:#ef4444;border:2px solid rgba(239,68,68,0.4);'
+        : 'background:rgba(16,185,129,0.2);color:#10b981;border:2px solid rgba(16,185,129,0.4);';
+
+    document.getElementById('customer-avatar').style.cssText += avatarColors;
+    document.getElementById('customer-avatar').textContent = initials;
+    document.getElementById('detail-name').textContent = name;
+
+    const idCol = Object.keys(p).find(k => k.toLowerCase().includes('customerid') || k.toLowerCase() === 'id');
+    document.getElementById('detail-id').textContent = idCol ? `ID: ${p[idCol]}` : '';
+
+    // Churn badge
+    const churnBadge = document.getElementById('detail-churn-badge');
+    churnBadge.textContent = isChurned ? '❌ Churned' : '✅ Active';
+    churnBadge.style.cssText = `padding:4px 14px;border-radius:20px;font-size:0.85rem;font-weight:800;
+        background:${isChurned ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.15)'};
+        color:${isChurned ? 'var(--accent-red)' : 'var(--accent-green)'};
+        border:1px solid ${isChurned ? 'rgba(239,68,68,0.3)' : 'rgba(16,185,129,0.3)'};`;
+
+    document.getElementById('detail-subscription-badge').textContent = p['Subscription Type'] ? `📦 ${p['Subscription Type']}` : '';
+    document.getElementById('detail-contract-badge').textContent = p['Contract Length'] ? `📋 ${p['Contract Length']}` : '';
+
+    // KPI tiles
+    const kpiFields = [
+        { label: '🕐 Tenure', key: 'Tenure', suffix: ' mo' },
+        { label: '💰 Total Spend', key: 'Total Spend', prefix: '$' },
+        { label: '📞 Support Calls', key: 'Support Calls' },
+        { label: '⏱ Last Interaction', key: 'Last Interaction', suffix: ' days' }
+    ];
+    const kpiContainer = document.getElementById('detail-kpis');
+    kpiContainer.innerHTML = kpiFields.map(f => {
+        const val = p[f.key] !== null && p[f.key] !== undefined ? p[f.key] : '—';
+        return `<div style="background:rgba(99,102,241,0.08);border-radius:12px;padding:14px;text-align:center;border:1px solid rgba(99,102,241,0.15);">
+            <div style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:4px;">${f.label}</div>
+            <div style="font-size:1.3rem;font-weight:800;">${f.prefix || ''}${val}${val !== '—' ? (f.suffix || '') : ''}</div>
+        </div>`;
+    }).join('');
+
+    // Charts (after DOM is ready)
+    setTimeout(() => {
+        // Grouped bar chart: customer vs. average
+        const compLabels = Object.keys(cmp);
+        const custVals = compLabels.map(k => cmp[k].customer);
+        const avgVals = compLabels.map(k => cmp[k].average);
+
+        Plotly.newPlot('hist-comparison-chart', [
+            { name: `${name}`, type: 'bar', x: compLabels, y: custVals, marker: { color: isChurned ? COLORS.red : COLORS.green }, text: custVals.map(String), textposition: 'auto', textfont: { color: '#fff', size: 12 } },
+            { name: 'Dataset Average', type: 'bar', x: compLabels, y: avgVals, marker: { color: COLORS.blue }, text: avgVals.map(v => String(Math.round(v))), textposition: 'auto', textfont: { color: '#fff', size: 12 } }
+        ], {
+            ...PLOTLY_THEME, height: 380, barmode: 'group',
+            title: { text: '<b>Customer vs. Average Comparison</b>', font: { size: 16, color: '#f0f2f5' } },
+            legend: { bgcolor: 'rgba(31,41,55,0.8)', font: { color: '#f0f2f5' } }
+        }, { responsive: true, displayModeBar: false });
+
+        // Radar chart
+        const radarFields = ['Tenure', 'Total Spend', 'Usage Frequency', 'Support Calls', 'Payment Delay'];
+        const radarExisting = radarFields.filter(f => cmp[f]);
+        if (radarExisting.length >= 3) {
+            const normalize = (val, key) => {
+                const avg = cmp[key]?.average || 1;
+                return Math.min((val / (avg * 2)) * 100, 100);
+            };
+            Plotly.newPlot('hist-radar-chart', [
+                {
+                    type: 'scatterpolar', fill: 'toself', name: name,
+                    r: radarExisting.map(k => normalize(cmp[k].customer, k)),
+                    theta: radarExisting,
+                    fillcolor: isChurned ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.15)',
+                    line: { color: isChurned ? COLORS.red : COLORS.green, width: 2 }
+                },
+                {
+                    type: 'scatterpolar', fill: 'toself', name: 'Avg Customer',
+                    r: radarExisting.map(() => 50),
+                    theta: radarExisting,
+                    fillcolor: 'rgba(59,130,246,0.1)',
+                    line: { color: COLORS.blue, width: 2, dash: 'dash' }
+                }
+            ], {
+                ...PLOTLY_THEME, height: 380,
+                polar: {
+                    radialaxis: { visible: true, range: [0, 100], gridcolor: 'rgba(255,255,255,0.06)', tickfont: { color: '#6b7280' } },
+                    angularaxis: { gridcolor: 'rgba(255,255,255,0.06)' },
+                    bgcolor: 'rgba(17,24,39,0.5)'
+                },
+                title: { text: '<b>Behaviour Profile (vs. Avg)</b>', font: { size: 16, color: '#f0f2f5' } },
+                legend: { bgcolor: 'rgba(31,41,55,0.8)', font: { color: '#f0f2f5' } }
+            }, { responsive: true, displayModeBar: false });
+        }
+    }, 100);
+
+    // Full record table
+    const tbody = document.getElementById('detail-fields-body');
+    const skipFields = ['Churn Date'];
+    tbody.innerHTML = Object.entries(p)
+        .filter(([k]) => !skipFields.includes(k))
+        .map(([k, v]) => {
+            let displayVal = v === null || v === '' ? '<span style="color:var(--text-muted);">—</span>' : v;
+            if (k === 'Churn') {
+                displayVal = isChurned
+                    ? '<span class="badge badge-danger">Churned</span>'
+                    : '<span class="badge badge-success">Active</span>';
+            }
+            return `<tr><td style="font-weight:600;color:var(--text-secondary);">${k}</td><td>${displayVal}</td></tr>`;
+        }).join('');
+}
+
+
 
 // Set default dates on load
 document.addEventListener('DOMContentLoaded', () => {
