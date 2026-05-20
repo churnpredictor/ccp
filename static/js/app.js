@@ -20,6 +20,14 @@ const COLORS = {
 let bulkFile = null;
 let bulkResults = null;
 
+// ─── Chart Insights Helper ───────────────────────────────────
+function chartInsights(points) {
+    return `<div class="insight-card">
+        <div class="insight-card-header">📌 How to read this chart</div>
+        ${points.map((p, i) => `<div class="insight-point"><span class="insight-num">${i + 1}</span><span>${p}</span></div>`).join('')}
+    </div>`;
+}
+
 // ─── Navigation ──────────────────────────────────────────────
 function navigateTo(page) {
     document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
@@ -29,36 +37,22 @@ function navigateTo(page) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     if (page === 'home') loadDashboard();
-    if (page === 'history') loadCustomerHistory();
+    if (page === 'browse') loadBrowseHistory();
     if (page === 'analytics') loadAnalytics();
     if (page === 'comparison') loadComparison();
     if (page === 'explainability') loadExplainability();
 }
 
-// ─── Dashboard ───────────────────────────────────────────────
+// ─── Dashboard KPIs ──────────────────────────────────────────
 async function loadDashboard() {
     try {
         const res = await fetch('/api/dashboard');
         const data = await res.json();
-
         animateNumber('kpi-total', data.total_customers);
         animateNumber('kpi-active', data.active);
         animateNumber('kpi-churned', data.churned);
         document.getElementById('kpi-rate').textContent = data.churn_rate + '%';
-
-        const tbody = document.getElementById('home-perf-body');
-        tbody.innerHTML = '';
-        for (const [name, m] of Object.entries(data.model_performance)) {
-            const best = name === data.best_model;
-            tbody.innerHTML += `<tr style="${best ? 'background:rgba(16,185,129,0.08)' : ''}">
-                <td style="font-weight:700;">${best ? '🏆 ' : ''}${name}</td>
-                <td>${m.accuracy}%</td><td>${m.precision}%</td>
-                <td>${m.recall}%</td><td>${m.f1_score}%</td><td>${m.auc}%</td>
-            </tr>`;
-        }
-        document.getElementById('home-best-model').textContent =
-            `🏆 Best Model: ${data.best_model} (F1 Score: ${data.best_f1}%)`;
-    } catch (e) { console.error('Dashboard load error:', e); }
+    } catch (e) { console.error('Dashboard error:', e); }
 }
 
 function animateNumber(id, target) {
@@ -227,8 +221,22 @@ function renderPredictionResults(data) {
 
     // ── Gauge + Distribution charts ───────────────────────────
     html += `<div class="grid-2" style="margin-bottom:24px;">
-        <div class="chart-container" id="gauge-chart" style="min-height:320px;"></div>
-        <div class="chart-container" id="dist-chart" style="min-height:320px;"></div>
+        <div>
+            <div class="chart-container" id="gauge-chart" style="min-height:320px;"></div>
+            ${chartInsights([
+        'Green zone (0–40%): Low risk — customer shows stable behaviour, no urgent action needed',
+        'Amber zone (40–75%): Elevated risk — monitor closely and consider a proactive retention offer',
+        'Red zone (75–100%): Critical risk — immediate intervention is recommended to prevent loss'
+    ])}
+        </div>
+        <div>
+            <div class="chart-container" id="dist-chart" style="min-height:320px;"></div>
+            ${chartInsights([
+        'Taller green bar means the model is more confident the customer will stay',
+        'Taller red bar signals multiple churn risk factors have been detected',
+        'A near-equal split indicates uncertainty — use the risk factor details below to dig deeper'
+    ])}
+        </div>
     </div>`;
 
     // ── Explanation: Why Will This Customer Churn / Stay ─────
@@ -285,7 +293,13 @@ function renderPredictionResults(data) {
     </div>`;
 
     // ── Feature Impact Chart ──────────────────────────────────
-    html += `<div class="chart-container" id="impact-chart" style="margin-bottom:24px;min-height:380px;"></div>`;
+    html += `<div class="chart-container" id="impact-chart" style="margin-bottom:12px;min-height:380px;"></div>
+    ${chartInsights([
+        'Red bars push this prediction toward churn; green bars push toward retention',
+        'Longer bar = stronger influence on <em>this specific customer\'s</em> prediction',
+        'The feature with the longest bar is the single biggest driver — address it first for maximum retention impact'
+    ])}
+    <div style="margin-bottom:24px;"></div>`;
 
     // ── Actionable Recommendations ────────────────────────────
     const recs = reasons.recommendations || [];
@@ -319,7 +333,13 @@ function renderPredictionResults(data) {
     </div>`;
 
     // ── Feature Importance ────────────────────────────────────
-    html += `<div class="chart-container" id="fi-chart" style="margin-bottom:24px;min-height:380px;"></div>`;
+    html += `<div class="chart-container" id="fi-chart" style="margin-bottom:12px;min-height:380px;"></div>
+    ${chartInsights([
+        'Higher score = the model relies on this feature most when making predictions across all customers',
+        'Unlike the impact chart above, this reflects patterns across the <em>entire dataset</em>, not just this customer',
+        'Use the top-3 features to focus your retention strategy, data quality efforts, and campaign targeting'
+    ])}
+    <div style="margin-bottom:24px;"></div>`;
 
     container.innerHTML = html;
 
@@ -428,20 +448,11 @@ function renderFeatureImportance(fi) {
     }, { responsive: true, displayModeBar: false });
 }
 
-// ─── Customer History & Search ───────────────────────────────
-function toggleDateFilter() {
-    const isEnabled = document.getElementById('enable-date-filter').checked;
-    const inputs = document.getElementById('date-inputs-container').querySelectorAll('input');
-    inputs.forEach(input => {
-        input.disabled = !isEnabled;
-        if (!isEnabled) input.style.opacity = '0.5';
-        else input.style.opacity = '1';
-    });
-}
+// ─── Customer Lookup & Browse ────────────────────────────────
 
 // ── Per-Customer Detail Search ──────────────────────────────
 async function searchCustomerDetail() {
-    const query = document.getElementById('history-search-input').value.trim();
+    const query = document.getElementById('lookup-search-input').value.trim();
     if (!query) { alert('Please enter a Customer ID or Name.'); return; }
 
     // Hide previous results
@@ -489,8 +500,14 @@ function renderCustomerDetail(data) {
             </div>
         </div>
         <div class="grid-2" style="margin-bottom:20px;">
-            <div class="chart-container" id="hist-comparison-chart"></div>
-            <div class="chart-container" id="hist-radar-chart"></div>
+            <div>
+                <div class="chart-container" id="hist-comparison-chart"></div>
+                <div id="hist-bar-insights"></div>
+            </div>
+            <div>
+                <div class="chart-container" id="hist-radar-chart"></div>
+                <div id="hist-radar-insights"></div>
+            </div>
         </div>
         <div class="card">
             <div class="card-title">📋 Full Customer Record</div>
@@ -562,6 +579,13 @@ function renderCustomerDetail(data) {
         // Radar chart
         const radarFields = ['Tenure', 'Total Spend', 'Usage Frequency', 'Support Calls', 'Payment Delay'];
         const radarExisting = radarFields.filter(f => cmp[f]);
+        const histBarEl = document.getElementById('hist-bar-insights');
+        if (histBarEl) histBarEl.innerHTML = chartInsights([
+            'This customer\'s bars vs. the dataset average reveal how atypical their behaviour is',
+            'Values significantly above average for Support Calls or Payment Delay are classic churn signals',
+            'Gaps between the customer and average help personalise retention offers for this specific individual'
+        ]);
+
         if (radarExisting.length >= 3) {
             const normalize = (val, key) => {
                 const avg = cmp[key]?.average || 1;
@@ -592,6 +616,13 @@ function renderCustomerDetail(data) {
                 title: { text: '<b>Behaviour Profile (vs. Avg)</b>', font: { size: 16, color: '#f0f2f5' } },
                 legend: { bgcolor: 'rgba(31,41,55,0.8)', font: { color: '#f0f2f5' } }
             }, { responsive: true, displayModeBar: false });
+
+            const histRadarEl = document.getElementById('hist-radar-insights');
+            if (histRadarEl) histRadarEl.innerHTML = chartInsights([
+                'The customer polygon vs. dashed average baseline shows behavioural deviations at a glance',
+                'Areas where the customer polygon extends beyond the average indicate higher-than-typical values',
+                'A tightly balanced shape near the centre typically indicates a stable, average-risk customer'
+            ]);
         }
     }, 100);
 
@@ -631,20 +662,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-async function loadCustomerHistory() {
-    const searchInput = document.getElementById('history-search-input').value.trim();
-    const useDates = document.getElementById('enable-date-filter').checked;
+async function loadBrowseHistory() {
+    const start = document.getElementById('history-start-date').value;
+    const end = document.getElementById('history-end-date').value;
 
     let url = '/api/customer_history?';
-    if (searchInput) {
-        url += `search=${encodeURIComponent(searchInput)}`;
-    } else if (useDates) {
-        const start = document.getElementById('history-start-date').value;
-        const end = document.getElementById('history-end-date').value;
-        if (start && end) {
-            url += `start=${start}&end=${end}`;
-        }
-    }
+    if (start && end) url += `start=${start}&end=${end}`;
 
     const resultsDiv = document.getElementById('history-results');
     resultsDiv.style.display = 'block';
@@ -653,66 +676,69 @@ async function loadCustomerHistory() {
     try {
         const res = await fetch(url);
         const data = await res.json();
-
         if (data.error) throw new Error(data.error);
 
-        // Update KPIs
         animateNumber('hist-kpi-found', data.metrics.total_found);
-
-        // Format Spend KPI properly
-        const startVal = parseFloat(document.getElementById('hist-kpi-spend').textContent.replace(/[^0-9.-]+/g, "")) || 0;
-        const targetVal = data.metrics.total_spend;
-
-        // Simple manual animation for currency
-        const duration = 1200;
-        const startTime = performance.now();
-        const el = document.getElementById('hist-kpi-spend');
-
-        function updateCurrency(currentTime) {
-            const elapsed = currentTime - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-            const eased = 1 - Math.pow(1 - progress, 3);
-            const current = startVal + (targetVal - startVal) * eased;
-
-            el.textContent = '$' + current.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            if (progress < 1) requestAnimationFrame(updateCurrency);
-        }
-        requestAnimationFrame(updateCurrency);
-
         animateNumber('hist-kpi-churned', data.metrics.churned_in_period);
 
-        // Render Table Headers
-        const thead = document.getElementById('history-thead');
-        thead.innerHTML = `<tr>${data.columns.map(col => `<th>${col}</th>`).join('')}</tr>`;
+        // Animated currency
+        const spendEl = document.getElementById('hist-kpi-spend');
+        const targetSpend = data.metrics.total_spend;
+        const spendStart = performance.now();
+        (function animateSpend(now) {
+            const p = Math.min((now - spendStart) / 1200, 1);
+            const e = 1 - Math.pow(1 - p, 3);
+            spendEl.textContent = '$' + (targetSpend * e).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            if (p < 1) requestAnimationFrame(animateSpend);
+        })(spendStart);
 
-        // Render Table Body
+        document.getElementById('history-thead').innerHTML = `<tr>${data.columns.map(c => `<th>${c}</th>`).join('')}</tr>`;
         const tbody = document.getElementById('history-tbody');
-        if (data.data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${data.columns.length}" style="text-align:center; padding: 24px;">No matching customers found.</td></tr>`;
+        if (!data.data.length) {
+            tbody.innerHTML = `<tr><td colspan="${data.columns.length}" style="text-align:center;padding:28px;color:var(--text-muted);">No customers found in this date range.</td></tr>`;
         } else {
-            tbody.innerHTML = data.data.map(row => {
-                const cells = data.columns.map(col => {
-                    let val = row[col];
-                    if (val === null || val === 'null' || val === 'None') val = '-';
-                    // Special coloring for Churn Date
-                    if (col === 'Churn Date' && val !== '-') {
-                        val = `<span class="badge badge-danger" style="font-size:0.75rem;">${val}</span>`;
-                    }
-                    if (col === 'Customer Name') {
-                        val = `<strong>${val}</strong>`;
-                    }
-                    return `<td>${val}</td>`;
-                }).join('');
-                return `<tr>${cells}</tr>`;
-            }).join('');
+            tbody.innerHTML = data.data.map(row =>
+                `<tr>${data.columns.map(col => {
+                    let v = row[col];
+                    if (v === null || v === 'null' || v === 'None') v = '-';
+                    if (col === 'Churn Date' && v !== '-') v = `<span class="badge badge-danger" style="font-size:0.75rem;">${v}</span>`;
+                    if (col === 'Customer Name') v = `<strong>${v}</strong>`;
+                    return `<td>${v}</td>`;
+                }).join('')}</tr>`
+            ).join('');
         }
-
         resultsDiv.style.opacity = '1';
-
     } catch (e) {
         resultsDiv.style.opacity = '1';
-        resultsDiv.innerHTML = `<div class="result-banner churn"><span class="banner-icon">❌</span> Error fetching history: ${e.message}</div>`;
+        resultsDiv.innerHTML = `<div class="result-banner churn"><span class="banner-icon">❌</span> Error: ${e.message}</div>`;
     }
+}
+
+// ─── Revenue Chart (Home Page) ───────────────────────────────
+function renderRevenueChart() {
+    const el = document.getElementById('revenue-chart');
+    if (!el) return;
+    Plotly.newPlot('revenue-chart', [{
+        type: 'bar',
+        orientation: 'h',
+        x: [400, 65, 1850],
+        y: ['Acquire New Customer', 'Retain Existing Customer', 'Avg Lifetime Value'],
+        marker: {
+            color: ['rgba(239,68,68,0.75)', 'rgba(16,185,129,0.75)', 'rgba(59,130,246,0.75)'],
+            line: { color: ['#ef4444', '#10b981', '#3b82f6'], width: 2 }
+        },
+        text: ['$400', '$65', '$1,850'],
+        textposition: 'outside',
+        textfont: { color: '#f0f2f5', size: 13, family: 'Inter, sans-serif' },
+        hovertemplate: '%{y}: <b>$%{x}</b><extra></extra>'
+    }], {
+        ...PLOTLY_THEME,
+        height: 220,
+        margin: { l: 180, r: 60, t: 10, b: 30 },
+        xaxis: { ...PLOTLY_THEME.xaxis, title: 'Cost / Value (USD)', tickprefix: '$' },
+        yaxis: { ...PLOTLY_THEME.yaxis, tickfont: { size: 12, color: '#a3adc2' } },
+        showlegend: false
+    }, { responsive: true, displayModeBar: false });
 }
 
 // ─── Bulk Prediction ─────────────────────────────────────────
@@ -825,49 +851,60 @@ async function loadAnalytics() {
         const res = await fetch('/api/model-analytics');
         const data = await res.json();
 
-        // Confusion Matrices
+        // Confusion Matrices — custom HTML cards with TP/TN/FP/FN
         const grid = document.getElementById('confusion-grid');
         grid.innerHTML = '';
         for (const [name, m] of Object.entries(data.analytics)) {
-            grid.innerHTML += `<div class="chart-container" id="cm-${name.replace(/\s/g, '')}"></div>`;
-        }
-        setTimeout(() => {
-            for (const [name, m] of Object.entries(data.analytics)) {
-                const cm = m.confusion_matrix;
-                Plotly.newPlot('cm-' + name.replace(/\s/g, ''), [{
-                    type: 'heatmap', z: cm, x: ['Stay', 'Churn'], y: ['Stay', 'Churn'],
-                    colorscale: [[0, '#1f2937'], [0.5, '#f97316'], [1, '#ef4444']],
-                    text: cm.map(r => r.map(v => v.toString())),
-                    texttemplate: '%{text}', textfont: { size: 20, color: '#fff' },
-                    showscale: false
-                }], {
-                    ...PLOTLY_THEME, height: 320,
-                    title: { text: `<b>${name}</b>`, font: { size: 14, color: '#f0f2f5' } },
-                    xaxis: { title: 'Predicted' }, yaxis: { title: 'Actual', autorange: 'reversed' }
-                }, { responsive: true, displayModeBar: false });
-            }
-        }, 100);
+            const cm = m.confusion_matrix;
+            // cm[0][0]=TN, cm[0][1]=FP, cm[1][0]=FN, cm[1][1]=TP
+            const TN = cm[0][0], FP = cm[0][1], FN = cm[1][0], TP = cm[1][1];
+            const total = TN + FP + FN + TP;
+            const acc = ((TP + TN) / total * 100).toFixed(1);
+            grid.innerHTML += `
+            <div class="card cm-card">
+                <div class="cm-model-name">${name}</div>
+                <div class="cm-accuracy">Accuracy: <strong>${acc}%</strong></div>
+                <div class="cm-legend-row">
+                    <span class="cm-legend-item"><span class="cm-dot cm-dot-tn"></span>True Negative</span>
+                    <span class="cm-legend-item"><span class="cm-dot cm-dot-fp"></span>False Positive</span>
+                    <span class="cm-legend-item"><span class="cm-dot cm-dot-fn"></span>False Negative</span>
+                    <span class="cm-legend-item"><span class="cm-dot cm-dot-tp"></span>True Positive</span>
+                </div>
+                <div class="cm-axis-label cm-axis-predicted">← Predicted →</div>
+                <div class="cm-grid-wrap">
+                    <div class="cm-axis-label cm-axis-actual">← Actual →</div>
+                    <div class="cm-grid">
+                        <div class="cm-header-cell"></div>
+                        <div class="cm-header-cell cm-pred-stay">Predicted: Stay</div>
+                        <div class="cm-header-cell cm-pred-churn">Predicted: Churn</div>
 
-        // ROC Curves
-        const traces = [];
-        for (const [name, r] of Object.entries(data.roc)) {
-            traces.push({
-                type: 'scatter', mode: 'lines', x: r.fpr, y: r.tpr,
-                name: `${name} (AUC=${r.auc.toFixed(3)})`,
-                line: { color: COLORS.models[name], width: 3 }
-            });
+                        <div class="cm-header-cell cm-actual-stay">Actual: Stay</div>
+                        <div class="cm-cell cm-tn">
+                            <div class="cm-cell-label">TN</div>
+                            <div class="cm-cell-value">${TN.toLocaleString()}</div>
+                            <div class="cm-cell-desc">Correctly predicted<br>as <strong>Stay</strong></div>
+                        </div>
+                        <div class="cm-cell cm-fp">
+                            <div class="cm-cell-label">FP</div>
+                            <div class="cm-cell-value">${FP.toLocaleString()}</div>
+                            <div class="cm-cell-desc">Stayer flagged as<br><strong>Churn</strong> (wasted outreach)</div>
+                        </div>
+
+                        <div class="cm-header-cell cm-actual-churn">Actual: Churn</div>
+                        <div class="cm-cell cm-fn">
+                            <div class="cm-cell-label">FN ⚠️</div>
+                            <div class="cm-cell-value">${FN.toLocaleString()}</div>
+                            <div class="cm-cell-desc">Churner missed by<br>model — <strong>costly error</strong></div>
+                        </div>
+                        <div class="cm-cell cm-tp">
+                            <div class="cm-cell-label">TP</div>
+                            <div class="cm-cell-value">${TP.toLocaleString()}</div>
+                            <div class="cm-cell-desc">Correctly predicted<br>as <strong>Churn</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
         }
-        traces.push({
-            type: 'scatter', mode: 'lines', x: [0, 1], y: [0, 1],
-            name: 'Random', line: { color: '#6b7280', dash: 'dash', width: 2 }
-        });
-        Plotly.newPlot('roc-chart', traces, {
-            ...PLOTLY_THEME, height: 500,
-            title: { text: '<b>ROC Curve Comparison</b>', font: { size: 18, color: '#f0f2f5' } },
-            xaxis: { ...PLOTLY_THEME.xaxis, title: 'False Positive Rate', range: [0, 1] },
-            yaxis: { ...PLOTLY_THEME.yaxis, title: 'True Positive Rate', range: [0, 1] },
-            legend: { bgcolor: 'rgba(31,41,55,0.8)', bordercolor: '#374151', borderwidth: 1 }
-        }, { responsive: true, displayModeBar: false });
 
         // Bar chart
         const metricNames = ['Accuracy', 'Precision', 'Recall', 'F1 Score', 'AUC'];
@@ -883,6 +920,20 @@ async function loadAnalytics() {
             yaxis: { ...PLOTLY_THEME.yaxis, title: 'Score', range: [0, 1.05] },
             legend: { bgcolor: 'rgba(31,41,55,0.8)' }
         }, { responsive: true, displayModeBar: false });
+
+        // Inject insights
+        const confEl = document.getElementById('confusion-insights');
+        if (confEl) confEl.innerHTML = chartInsights([
+            'Green TN + TP cells (diagonal) = correct predictions — a high-accuracy model maximises both',
+            'Orange FN (bottom-left) = real churners the model missed — the most costly business error; minimise this',
+            'Yellow FP (top-right) = loyal customers wrongly flagged — wastes retention budget on people who would have stayed'
+        ]);
+        const metEl = document.getElementById('metrics-insights');
+        if (metEl) metEl.innerHTML = chartInsights([
+            'Accuracy = overall correct predictions; useful but misleading on imbalanced datasets',
+            'F1 Score = harmonic mean of Precision and Recall — the single best metric for churn models',
+            'Recall (Sensitivity) is critical: a low Recall means many real churners go undetected and unretained'
+        ]);
 
     } catch (e) { console.error('Analytics error:', e); }
 }
@@ -900,37 +951,132 @@ async function loadComparison() {
         const res = await fetch('/api/dashboard');
         const data = await res.json();
 
-        const tbody = document.getElementById('comparison-table-body');
-        tbody.innerHTML = '';
-        for (const [name, m] of Object.entries(data.model_performance)) {
-            const best = name === data.best_model;
-            tbody.innerHTML += `<tr style="${best ? 'background:rgba(16,185,129,0.08)' : ''}">
-                <td style="font-weight:700;">${best ? '🏆 ' : ''}${name}</td>
-                <td>${m.accuracy}%</td><td>${m.precision}%</td>
-                <td>${m.recall}%</td><td>${m.f1_score}%</td><td>${m.auc}%</td>
-            </tr>`;
-        }
-
-        // Radar chart
+        const models = Object.entries(data.model_performance);
         const metrics = ['Accuracy', 'Precision', 'Recall', 'F1 Score', 'AUC'];
         const keys = ['accuracy', 'precision', 'recall', 'f1_score', 'auc'];
-        const traces = Object.entries(data.model_performance).map(([name, m]) => ({
-            type: 'scatterpolar',
-            r: keys.map(k => m[k]),
-            theta: metrics,
-            fill: 'toself',
-            name, fillcolor: COLORS.models[name] + '20',
-            line: { color: COLORS.models[name], width: 2 }
+        const metricDesc = {
+            'Accuracy':  'Overall % correct predictions',
+            'Precision': 'Of predicted churners, how many truly churned',
+            'Recall':    'Of real churners, how many were caught',
+            'F1 Score':  'Balance of Precision & Recall — best single metric',
+            'AUC':       'Ability to rank churners above non-churners'
+        };
+        const modelIcons = {
+            'Logistic Regression': '📘',
+            'Decision Tree': '🌳',
+            'Random Forest': '🌲',
+            'XGBoost': '🚀'
+        };
+
+        // Hide old plain table
+        const oldTable = document.getElementById('comparison-table-body');
+        if (oldTable) oldTable.closest('.card').style.display = 'none';
+
+        // Per-metric: find best & worst values for color scaling
+        const metricRanges = {};
+        keys.forEach((k, i) => {
+            const vals = models.map(([, m]) => parseFloat(m[k]));
+            metricRanges[k] = { min: Math.min(...vals), max: Math.max(...vals) };
+        });
+
+        // Compute overall winner (highest average across all metrics)
+        const avgScores = models.map(([name, m]) => ({
+            name,
+            avg: keys.reduce((s, k) => s + parseFloat(m[k]), 0) / keys.length
         }));
-        Plotly.newPlot('radar-chart', traces, {
-            ...PLOTLY_THEME, height: 500,
-            polar: {
-                radialaxis: { visible: true, range: [0, 100], gridcolor: 'rgba(255,255,255,0.06)' },
-                angularaxis: { gridcolor: 'rgba(255,255,255,0.06)' },
-                bgcolor: 'rgba(17,24,39,0.5)'
-            },
-            legend: { bgcolor: 'rgba(31,41,55,0.8)' }
-        }, { responsive: true, displayModeBar: false });
+        avgScores.sort((a, b) => b.avg - a.avg);
+        const overallWinner = avgScores[0].name;
+
+        // Per metric: rank each model
+        const metricRanks = {};
+        keys.forEach((k, i) => {
+            const sorted = [...models].sort((a, b) => parseFloat(b[1][k]) - parseFloat(a[1][k]));
+            metricRanks[k] = {};
+            sorted.forEach(([name], rank) => { metricRanks[k][name] = rank + 1; });
+        });
+
+        function heatColor(val, min, max) {
+            // 0 = worst red, 1 = best green — interpolate
+            const t = max === min ? 1 : (val - min) / (max - min);
+            if (t >= 0.8) return { bg: 'rgba(16,185,129,0.18)', border: 'rgba(16,185,129,0.4)', text: '#34d399' };
+            if (t >= 0.5) return { bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.3)', text: '#fbbf24' };
+            return { bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.3)', text: '#f87171' };
+        }
+
+        function rankBadge(rank) {
+            if (rank === 1) return `<span class="sc-rank sc-rank-1">1st</span>`;
+            if (rank === 2) return `<span class="sc-rank sc-rank-2">2nd</span>`;
+            if (rank === 3) return `<span class="sc-rank sc-rank-3">3rd</span>`;
+            return `<span class="sc-rank sc-rank-4">4th</span>`;
+        }
+
+        // Build scorecard HTML
+        let sc = `<div class="sc-wrap">`;
+
+        // Header row
+        sc += `<div class="sc-row sc-header-row">
+            <div class="sc-cell sc-model-col"></div>`;
+        metrics.forEach((metric, i) => {
+            sc += `<div class="sc-cell sc-header-cell">
+                <div class="sc-metric-name">${metric}</div>
+                <div class="sc-metric-desc">${metricDesc[metric]}</div>
+            </div>`;
+        });
+        sc += `<div class="sc-cell sc-header-cell">Avg Score</div></div>`;
+
+        // Model rows
+        models.forEach(([name, m]) => {
+            const isWinner = name === overallWinner;
+            sc += `<div class="sc-row${isWinner ? ' sc-winner-row' : ''}">
+                <div class="sc-cell sc-model-col">
+                    ${isWinner ? '<span class="sc-trophy">🏆</span>' : ''}
+                    <span class="sc-model-icon">${modelIcons[name] || '🤖'}</span>
+                    <span class="sc-model-name">${name}</span>
+                </div>`;
+
+            keys.forEach(k => {
+                const val = parseFloat(m[k]);
+                const c = heatColor(val, metricRanges[k].min, metricRanges[k].max);
+                const rank = metricRanks[k][name];
+                sc += `<div class="sc-cell sc-value-cell" style="background:${c.bg};border-color:${c.border};">
+                    <div class="sc-value" style="color:${c.text};">${val.toFixed(1)}%</div>
+                    <div class="sc-bar-wrap"><div class="sc-bar" style="width:${val}%;background:${c.text};"></div></div>
+                    ${rankBadge(rank)}
+                </div>`;
+            });
+
+            // Average score cell
+            const avg = keys.reduce((s, k) => s + parseFloat(m[k]), 0) / keys.length;
+            const avgC = heatColor(avg, Math.min(...avgScores.map(x=>x.avg)), Math.max(...avgScores.map(x=>x.avg)));
+            sc += `<div class="sc-cell sc-value-cell sc-avg-cell" style="background:${avgC.bg};border-color:${avgC.border};">
+                <div class="sc-value" style="color:${avgC.text};">${avg.toFixed(1)}%</div>
+            </div>`;
+
+            sc += `</div>`;
+        });
+
+        // Legend
+        sc += `<div class="sc-legend">
+            <span class="sc-legend-item"><span class="sc-legend-dot" style="background:rgba(16,185,129,0.5)"></span>Best in group</span>
+            <span class="sc-legend-item"><span class="sc-legend-dot" style="background:rgba(245,158,11,0.5)"></span>Mid range</span>
+            <span class="sc-legend-item"><span class="sc-legend-dot" style="background:rgba(239,68,68,0.5)"></span>Lowest in group</span>
+        </div>`;
+
+        sc += `</div>`;
+
+        // Hide old plain table (scorecard replaces it)
+        const plainTable = document.getElementById('comparison-plain-table');
+        if (plainTable) plainTable.style.display = 'none';
+
+        const chartEl = document.getElementById('comparison-bar-chart');
+        if (chartEl) chartEl.innerHTML = sc;
+
+        const compEl = document.getElementById('comparison-bar-insights');
+        if (compEl) compEl.innerHTML = chartInsights([
+            'Each cell is green (top score), amber (mid), or red (lowest) for that metric — read across a row to see one model\'s full profile',
+            'F1 Score is the most important column: it balances catching real churners against false alarms — prioritise it when picking a model',
+            'The 🏆 row has the highest average score across all metrics — this is the recommended model for production deployment'
+        ]);
 
     } catch (e) { console.error('Comparison error:', e); }
 }
@@ -969,6 +1115,13 @@ async function loadExplainability() {
             title: { text: `<b>SHAP Feature Importance — ${model}</b>`, font: { size: 18, color: '#f0f2f5' } },
             xaxis: { ...PLOTLY_THEME.xaxis, title: 'Mean |SHAP Value|' }
         }, { responsive: true, displayModeBar: false });
+
+        const shapChartInsightsEl = document.getElementById('shap-chart-insights');
+        if (shapChartInsightsEl) shapChartInsightsEl.innerHTML = chartInsights([
+            'Each bar represents the average absolute SHAP value — how much that feature shifts predictions across all customers',
+            'Taller bars are features the model considers most when deciding churn vs. stay for any customer',
+            'Use the top features to guide data collection priorities, retention campaign targeting, and business strategy'
+        ]);
 
         // Key insights
         const top3 = importance.slice(0, 3);
@@ -1056,12 +1209,32 @@ function renderDTreeResults(data) {
     </div>`;
 
     // Tree Visualization (full width)
-    html += `<div class="chart-container" id="dtree-viz" style="margin-bottom:24px;min-height:650px;"></div>`;
+    html += `<div class="chart-container" id="dtree-viz" style="margin-bottom:12px;min-height:650px;"></div>
+    ${chartInsights([
+        'The blue highlighted path = the exact sequence of decisions the model took for this specific customer',
+        'Each node shows the feature checked and the threshold used at that split point',
+        'Follow the path top to bottom to understand step-by-step why the model predicted churn or stay'
+    ])}
+    <div style="margin-bottom:24px;"></div>`;
 
     // Gauge + Feature Importance
     html += `<div class="grid-2">
-        <div class="chart-container" id="dt-gauge-chart"></div>
-        <div class="chart-container" id="dt-fi-chart"></div>
+        <div>
+            <div class="chart-container" id="dt-gauge-chart"></div>
+            ${chartInsights([
+        'The Decision Tree uses rule-based logic — the gauge shows the confidence of its leaf node prediction',
+        'Compare this gauge with the main Single Prediction gauge to see if both models agree',
+        'High agreement between models strengthens confidence in the final churn or stay verdict'
+    ])}
+        </div>
+        <div>
+            <div class="chart-container" id="dt-fi-chart"></div>
+            ${chartInsights([
+        'Higher score = this feature appeared more often at important splits across the decision tree',
+        'Top features reflect what the tree relies on most — they are the strongest predictors in this model',
+        'Compare with the Random Forest feature importance to see if the models agree on key drivers'
+    ])}
+        </div>
     </div>`;
 
     container.innerHTML = html;
@@ -1144,194 +1317,94 @@ function renderTreeChart(viz, prediction) {
     // Dim edges (non-path)
     traces.push({
         x: dimEdgeX, y: dimEdgeY, mode: 'lines',
-        line: { color: 'rgba(107,114,128,0.15)', width: 1 },
+        line: { color: 'rgba(107,114,128,0.3)', width: 1.5 },
         hoverinfo: 'none', showlegend: false
     });
 
     // Bright edges (decision path)
     traces.push({
         x: brightEdgeX, y: brightEdgeY, mode: 'lines',
-        line: { color: '#3b82f6', width: 3.5 },
+        line: { color: '#60a5fa', width: 5 },
         hoverinfo: 'none', showlegend: false, name: 'Decision Path'
     });
 
-    // Non-path internal nodes (tiny dots)
+    // Non-path internal nodes
     if (otherInternal.length) {
         traces.push({
             x: otherInternal.map(n => n.x), y: otherInternal.map(n => n.y),
-            mode: 'markers', type: 'scatter',
-            marker: { size: 5, color: '#1f2937', line: { color: '#374151', width: 1 } },
-            text: otherInternal.map(n => n.label), hoverinfo: 'text', showlegend: false
+            mode: 'markers+text', type: 'scatter',
+            marker: { size: 10, color: '#1e293b', line: { color: '#475569', width: 1.5 } },
+            text: otherInternal.map(n => n.label),
+            textposition: 'top center',
+            textfont: { size: 9, color: '#94a3b8', family: 'Inter, sans-serif' },
+            hoverinfo: 'text', showlegend: false
         });
     }
 
-    // Non-path leaf nodes (small colored dots)
+    // Non-path leaf nodes
     if (otherLeaves.length) {
         traces.push({
             x: otherLeaves.map(n => n.x), y: otherLeaves.map(n => n.y),
             mode: 'markers', type: 'scatter',
             marker: {
-                size: 8,
-                color: otherLeaves.map(n => n.label === 'Churn' ? 'rgba(239,68,68,0.25)' : 'rgba(16,185,129,0.25)'),
-                line: { color: otherLeaves.map(n => n.label === 'Churn' ? 'rgba(239,68,68,0.5)' : 'rgba(16,185,129,0.5)'), width: 1 }
+                size: 10,
+                color: otherLeaves.map(n => n.label === 'Churn' ? 'rgba(239,68,68,0.35)' : 'rgba(16,185,129,0.35)'),
+                line: { color: otherLeaves.map(n => n.label === 'Churn' ? 'rgba(239,68,68,0.7)' : 'rgba(16,185,129,0.7)'), width: 1.5 }
             },
             text: otherLeaves.map(n => n.label), hoverinfo: 'text', showlegend: false
         });
     }
 
-    // Path internal nodes (large, labeled)
+    // Path internal nodes (highlighted, labeled)
     if (pathInternal.length) {
         traces.push({
             x: pathInternal.map(n => n.x), y: pathInternal.map(n => n.y),
             mode: 'markers+text', type: 'scatter',
-            marker: { size: 18, color: 'rgba(59,130,246,0.9)', line: { color: '#60a5fa', width: 2 }, symbol: 'circle' },
+            marker: {
+                size: 22,
+                color: 'rgba(59,130,246,0.95)',
+                line: { color: '#bfdbfe', width: 3 },
+                symbol: 'circle'
+            },
             text: pathInternal.map(n => n.label),
             textposition: 'top center',
-            textfont: { size: 10, color: '#93c5fd', family: 'Inter, sans-serif' },
-            hoverinfo: 'text', showlegend: false, name: 'Path Nodes'
+            textfont: { size: 11, color: '#bfdbfe', family: 'Inter, sans-serif' },
+            hoverinfo: 'text', showlegend: false, name: 'Decision Path'
         });
     }
 
-    // Path leaf node (large diamond, prominent)
+    // Path leaf node (large diamond, result)
     if (pathLeaves.length) {
         const leaf = pathLeaves[0];
         const leafColor = leaf.label === 'Churn' ? '#ef4444' : '#10b981';
+        const leafBorder = leaf.label === 'Churn' ? '#fca5a5' : '#6ee7b7';
         traces.push({
             x: [leaf.x], y: [leaf.y],
             mode: 'markers+text', type: 'scatter',
-            marker: { size: 26, color: leafColor, line: { color: '#f0f2f5', width: 3 }, symbol: 'diamond' },
-            text: [leaf.label === 'Churn' ? '🔴 CHURN' : '🟢 STAY'],
+            marker: { size: 32, color: leafColor, line: { color: leafBorder, width: 4 }, symbol: 'diamond' },
+            text: [leaf.label === 'Churn' ? '⬥ CHURN' : '⬥ STAY'],
             textposition: 'top center',
-            textfont: { size: 13, color: '#f0f2f5', family: 'Inter, sans-serif' },
+            textfont: { size: 14, color: '#f0f2f5', family: 'Inter, sans-serif' },
             hoverinfo: 'text', showlegend: false
         });
     }
 
     Plotly.newPlot('dtree-viz', traces, {
         ...PLOTLY_THEME,
-        height: 650,
-        title: { text: '<b>🌳 Full Decision Tree — Decision Path Highlighted</b><br><span style="font-size:0.75em;color:#9ca3af">Zoom and pan to explore • Blue path = your customer\'s prediction route</span>', font: { size: 16, color: '#f0f2f5' } },
+        height: 800,
+        title: {
+            text: '<b>Decision Tree — Decision Path Highlighted in Blue</b><br><span style="font-size:0.78em;color:#94a3b8">Scroll to zoom • Drag to pan • Blue path = your customer\'s exact prediction route</span>',
+            font: { size: 16, color: '#f0f2f5' }
+        },
         xaxis: { showgrid: false, zeroline: false, showticklabels: false, fixedrange: false },
         yaxis: { showgrid: false, zeroline: false, showticklabels: false, fixedrange: false },
-        margin: { l: 20, r: 20, t: 80, b: 20 },
-        dragmode: 'pan'
+        margin: { l: 30, r: 30, t: 90, b: 30 },
+        dragmode: 'pan',
+        plot_bgcolor: 'rgba(10,15,28,0.8)'
     }, { responsive: true, displayModeBar: true, modeBarButtonsToRemove: ['autoScale2d', 'lasso2d', 'select2d'] });
 }
 
 
-// ─── Monthly Churn Trends ────────────────────────────────────
-async function loadMonthlyChurn() {
-    const fromMonth = document.getElementById('monthly-from').value;
-    const toMonth = document.getElementById('monthly-to').value;
-
-    const payload = {};
-    if (fromMonth) payload.from_month = fromMonth;
-    if (toMonth) payload.to_month = toMonth;
-
-    const kpis = document.getElementById('monthly-kpis');
-    const results = document.getElementById('monthly-results');
-    kpis.style.display = 'none';
-    results.style.display = 'none';
-    results.innerHTML = '<div class="spinner"></div><div class="loading-text">Loading monthly data...</div>';
-    results.style.display = 'block';
-
-    try {
-        const res = await fetch('/api/monthly-churn', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-
-        // Set month pickers to available range if not set
-        if (!fromMonth && data.available_months.length) {
-            document.getElementById('monthly-from').value = data.available_months[0];
-        }
-        if (!toMonth && data.available_months.length) {
-            document.getElementById('monthly-to').value = data.available_months[data.available_months.length - 1];
-        }
-
-        renderMonthlyResults(data);
-    } catch (e) {
-        results.innerHTML = `<div class="result-banner churn"><span class="banner-icon">❌</span> Error: ${e.message}</div>`;
-    }
-}
-
-function renderMonthlyResults(data) {
-    const kpis = document.getElementById('monthly-kpis');
-    const results = document.getElementById('monthly-results');
-    const s = data.summary;
-
-    // KPI Cards
-    kpis.innerHTML = `
-        <div class="kpi-card">
-            <div class="kpi-icon">👥</div>
-            <div class="kpi-value">${s.total_customers.toLocaleString()}</div>
-            <div class="kpi-label">Total Customers</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-icon">🔴</div>
-            <div class="kpi-value" style="color:${COLORS.red}">${s.total_churned.toLocaleString()}</div>
-            <div class="kpi-label">Churned</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-icon">🟢</div>
-            <div class="kpi-value" style="color:${COLORS.green}">${s.total_stayed.toLocaleString()}</div>
-            <div class="kpi-label">Retained</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-icon">📈</div>
-            <div class="kpi-value" style="color:${COLORS.orange}">${s.avg_churn_rate}%</div>
-            <div class="kpi-label">Avg Churn Rate</div>
-        </div>`;
-    kpis.style.display = 'grid';
-
-    // Reset results area
-    results.innerHTML = `
-        <div class="chart-container" id="monthly-bar-chart" style="margin-bottom:24px;"></div>
-        <div class="chart-container" id="monthly-rate-chart"></div>`;
-    results.style.display = 'block';
-
-    setTimeout(() => {
-        // Grouped Bar Chart — Churned vs Stayed per month
-        Plotly.newPlot('monthly-bar-chart', [
-            {
-                x: data.months, y: data.stayed, name: 'Stayed',
-                type: 'bar',
-                marker: { color: 'rgba(16,185,129,0.7)', line: { color: COLORS.green, width: 1 } }
-            },
-            {
-                x: data.months, y: data.churned, name: 'Churned',
-                type: 'bar',
-                marker: { color: 'rgba(239,68,68,0.7)', line: { color: COLORS.red, width: 1 } }
-            }
-        ], {
-            ...PLOTLY_THEME, height: 420, barmode: 'group',
-            title: { text: '<b>Monthly Churn vs Retained Customers</b>', font: { size: 16, color: '#f0f2f5' } },
-            xaxis: { ...PLOTLY_THEME.xaxis, title: 'Month', tickangle: -45 },
-            yaxis: { ...PLOTLY_THEME.yaxis, title: 'Number of Customers' },
-            legend: { font: { color: '#f0f2f5' }, bgcolor: 'transparent' },
-            margin: { l: 60, r: 30, t: 60, b: 80 }
-        }, { responsive: true, displayModeBar: false });
-
-        // Churn Rate Trend Line
-        Plotly.newPlot('monthly-rate-chart', [{
-            x: data.months, y: data.churn_rate,
-            type: 'scatter', mode: 'lines+markers',
-            name: 'Churn Rate',
-            line: { color: COLORS.orange, width: 3, shape: 'spline' },
-            marker: { size: 8, color: COLORS.orange, line: { color: '#f0f2f5', width: 1 } },
-            fill: 'tozeroy',
-            fillcolor: 'rgba(245,158,11,0.08)'
-        }], {
-            ...PLOTLY_THEME, height: 350,
-            title: { text: '<b>Monthly Churn Rate Trend (%)</b>', font: { size: 16, color: '#f0f2f5' } },
-            xaxis: { ...PLOTLY_THEME.xaxis, title: 'Month', tickangle: -45 },
-            yaxis: { ...PLOTLY_THEME.yaxis, title: 'Churn Rate (%)', rangemode: 'tozero' },
-            margin: { l: 60, r: 30, t: 60, b: 80 }
-        }, { responsive: true, displayModeBar: false });
-    }, 100);
-}
 
 // ─── Drag & Drop ─────────────────────────────────────────────
 
@@ -1355,4 +1428,3 @@ if (dropZone) {
 }
 
 // ─── Init ────────────────────────────────────────────────────
-loadDashboard();

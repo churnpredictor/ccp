@@ -30,15 +30,23 @@
                 <div class="nav-item active" data-page="home" onclick="navigateTo('home')">
                     <span class="nav-icon">🏠</span> Dashboard
                 </div>
-                <div class="nav-item" data-page="history" onclick="navigateTo('history')">
-                    <span class="nav-icon">🔍</span> Customer History
-                </div>
+
+                <div class="nav-group-label">Predict</div>
                 <div class="nav-item" data-page="predict" onclick="navigateTo('predict')">
                     <span class="nav-icon">🔮</span> Single Prediction
                 </div>
                 <div class="nav-item" data-page="bulk" onclick="navigateTo('bulk')">
                     <span class="nav-icon">📂</span> Bulk Prediction
                 </div>
+
+                <div class="nav-group-label">Explore</div>
+                <div class="nav-item" data-page="lookup" onclick="navigateTo('lookup')">
+                    <span class="nav-icon">🔍</span> Customer Lookup
+                </div>
+                <div class="nav-item" data-page="browse" onclick="navigateTo('browse')">
+                    <span class="nav-icon">📋</span> Browse Churn Dates
+                </div>
+                <div class="nav-group-label">Analytics</div>
                 <div class="nav-item" data-page="analytics" onclick="navigateTo('analytics')">
                     <span class="nav-icon">📊</span> Model Analytics
                 </div>
@@ -51,9 +59,6 @@
                 <div class="nav-item" data-page="explainability" onclick="navigateTo('explainability')">
                     <span class="nav-icon">🧠</span> Explainability
                 </div>
-                <div class="nav-item" data-page="monthly" onclick="navigateTo('monthly')">
-                    <span class="nav-icon">📅</span> Monthly Trends
-                </div>
             </nav>
             <div class="sidebar-footer">
                 Powered by ML & Explainable AI<br>
@@ -65,139 +70,113 @@
         <main class="main">
 
             <!-- ═══════ HOME PAGE ═══════ -->
+            <!-- ═══════ HOME PAGE ═══════ -->
             <section id="page-home" class="page-section active">
-                <div class="welcome-hero">
-                    <div class="welcome-title">Customer Churn Prediction System</div>
-                    <div class="welcome-desc">
-                        Advanced AI-powered analytics platform that predicts and prevents customer churn using
-                        state-of-the-art machine learning algorithms and SHAP-based explainable AI.
+
+                <!-- ── Hero Banner ── -->
+                <div class="dash-hero">
+                    <div class="dash-hero-left">
+                        <div class="dash-badge">AI-Powered Analytics</div>
+                        <h1 class="dash-title">Smart Churn<br>Predictor</h1>
+                        <p class="dash-tagline">Know who's leaving — before they do.</p>
+                    </div>
+                    <div class="dash-hero-right">
+                        <div class="dash-ps-card dash-ps-problem">
+                            <div class="dash-ps-icon">⚠️</div>
+                            <div>
+                                <div class="dash-ps-label">The Problem</div>
+                                <div class="dash-ps-text">Businesses silently lose customers every month with no
+                                    warning — making retention reactive, expensive, and often too late.</div>
+                            </div>
+                        </div>
+                        <div class="dash-ps-card dash-ps-solution">
+                            <div class="dash-ps-icon">✅</div>
+                            <div>
+                                <div class="dash-ps-label">Our Solution</div>
+                                <div class="dash-ps-text">An AI system that predicts churn before it happens, explains
+                                    every decision in plain language, and recommends precise retention actions.</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="kpi-grid" id="kpi-grid">
-                    <div class="kpi-card">
-                        <div class="kpi-label">📋 Total Customers</div>
-                        <div class="kpi-value" id="kpi-total">—</div>
-                        <span class="kpi-icon">👥</span>
+                <!-- ── Dataset Stats ── -->
+                <div class="dash-stats-heading">
+                    <span class="dash-stats-line"></span>
+                    <span class="dash-stats-label">Dataset Overview</span>
+                    <span class="dash-stats-line"></span>
+                </div>
+
+                <div class="dash-kpi-row">
+                    <div class="dash-kpi-card dash-kpi-total">
+                        <div class="dash-kpi-icon-wrap">👥</div>
+                        <div class="dash-kpi-body">
+                            <div class="dash-kpi-value" id="kpi-total">—</div>
+                            <div class="dash-kpi-label">Total Customers</div>
+                        </div>
+                        <div class="dash-kpi-bar" style="background:var(--gradient-primary);"></div>
                     </div>
-                    <div class="kpi-card">
-                        <div class="kpi-label">✅ Active Customers</div>
-                        <div class="kpi-value" id="kpi-active">—</div>
-                        <span class="kpi-icon">💚</span>
+                    <div class="dash-kpi-card dash-kpi-active">
+                        <div class="dash-kpi-icon-wrap">💚</div>
+                        <div class="dash-kpi-body">
+                            <div class="dash-kpi-value" id="kpi-active">—</div>
+                            <div class="dash-kpi-label">Active Customers</div>
+                        </div>
+                        <div class="dash-kpi-bar" style="background:var(--gradient-green);"></div>
                     </div>
-                    <div class="kpi-card">
-                        <div class="kpi-label">❌ Churned Customers</div>
-                        <div class="kpi-value" id="kpi-churned">—</div>
-                        <span class="kpi-icon">💔</span>
+                    <div class="dash-kpi-card dash-kpi-churned">
+                        <div class="dash-kpi-icon-wrap">💔</div>
+                        <div class="dash-kpi-body">
+                            <div class="dash-kpi-value" id="kpi-churned">—</div>
+                            <div class="dash-kpi-label">Churned Customers</div>
+                        </div>
+                        <div class="dash-kpi-bar"
+                            style="background:linear-gradient(135deg,#ef4444,#dc2626);"></div>
                     </div>
-                    <div class="kpi-card">
-                        <div class="kpi-label">🎯 Churn Rate</div>
-                        <div class="kpi-value" id="kpi-rate">—</div>
-                        <span class="kpi-icon">📊</span>
+                    <div class="dash-kpi-card dash-kpi-rate">
+                        <div class="dash-kpi-icon-wrap">📊</div>
+                        <div class="dash-kpi-body">
+                            <div class="dash-kpi-value" id="kpi-rate">—</div>
+                            <div class="dash-kpi-label">Overall Churn Rate</div>
+                        </div>
+                        <div class="dash-kpi-bar" style="background:var(--gradient-blue);"></div>
                     </div>
                 </div>
 
-                <div class="card" style="margin-bottom:24px;">
-                    <div class="card-title">🏆 Model Performance</div>
-                    <div class="table-container">
-                        <table id="home-performance-table">
-                            <thead>
-                                <tr>
-                                    <th>Model</th>
-                                    <th>Accuracy</th>
-                                    <th>Precision</th>
-                                    <th>Recall</th>
-                                    <th>F1 Score</th>
-                                    <th>AUC</th>
-                                </tr>
-                            </thead>
-                            <tbody id="home-perf-body"></tbody>
-                        </table>
-                    </div>
-                    <div id="home-best-model" style="margin-top:16px; color: var(--accent-green); font-weight:700;">
-                    </div>
-                </div>
-
-                <div class="grid-3">
-                    <div class="feature-card" onclick="navigateTo('predict')">
-                        <div class="feature-icon">🔮</div>
-                        <div class="feature-title">Single Prediction</div>
-                        <div class="feature-desc">Enter customer details and get instant churn probability with
-                            AI-explained reasons</div>
-                    </div>
-                    <div class="feature-card" onclick="navigateTo('bulk')">
-                        <div class="feature-icon">📂</div>
-                        <div class="feature-title">Bulk Prediction</div>
-                        <div class="feature-desc">Upload CSV files to process hundreds of customers at once</div>
-                    </div>
-                    <div class="feature-card" onclick="navigateTo('explainability')">
-                        <div class="feature-icon">🧠</div>
-                        <div class="feature-title">SHAP Explainability</div>
-                        <div class="feature-desc">Understand what drives predictions with SHAP analysis</div>
-                    </div>
-                </div>
             </section>
 
-            <!-- ═══════ CUSTOMER HISTORY ═══════ -->
-            <section id="page-history" class="page-section">
+            <!-- ═══════ CUSTOMER LOOKUP ═══════ -->
+            <section id="page-lookup" class="page-section">
                 <div class="page-header">
-                    <div class="page-title">🔍 Customer History &amp; Search</div>
-                    <div class="page-subtitle">Search by exact Customer ID or Name for a detailed profile, or use date
-                        filters to explore churned customers</div>
+                    <div class="page-title">🔍 Customer Lookup</div>
+                    <div class="page-subtitle">Search by Customer ID or Name to view a full profile with charts and
+                        behavioural analysis</div>
                 </div>
 
-                <div class="grid-2">
-                    <!-- Search Box -->
-                    <div class="card" style="border:1px solid rgba(99,102,241,0.3);">
-                        <div class="card-title">🔎 Customer Lookup</div>
-                        <p style="color:var(--text-secondary);font-size:0.88rem;margin-bottom:14px;">Enter a Customer ID
-                            or Name to see a full profile with statistics and graphs.</p>
-                        <div class="form-group" style="margin-bottom:14px;">
+                <div class="card lookup-card" style="margin-bottom:28px;">
+                    <div class="card-title">🔎 Search Customer</div>
+                    <p style="color:var(--text-secondary);font-size:0.88rem;margin-bottom:18px;">Enter an exact Customer
+                        ID (e.g. <code
+                            style="background:rgba(255,255,255,0.07);padding:2px 7px;border-radius:5px;">5575-GNVDE</code>)
+                        or a customer name to retrieve their full profile.</p>
+                    <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+                        <div class="form-group" style="flex:1;min-width:240px;margin-bottom:0;">
                             <label class="form-label">Customer ID or Name</label>
-                            <input type="text" class="form-input" id="history-search-input"
+                            <input type="text" class="form-input" id="lookup-search-input"
                                 placeholder="e.g. 5575-GNVDE or John Smith" autocomplete="off"
                                 onkeydown="if(event.key==='Enter') searchCustomerDetail()">
                         </div>
-                        <button class="btn btn-primary btn-full" onclick="searchCustomerDetail()">
-                            🔍 Show Customer Profile
-                        </button>
-                    </div>
-
-                    <!-- Date Filter -->
-                    <div class="card">
-                        <div class="card-title">📅 Browse by Churn Date</div>
-                        <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:12px;">Select a date range
-                            to list customers who churned within that period.</p>
-                        <div style="margin-bottom: 12px;">
-                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-                                <input type="checkbox" id="enable-date-filter" checked onchange="toggleDateFilter()">
-                                <span>Enable Date Filter</span>
-                            </label>
-                        </div>
-                        <div class="grid-2" id="date-inputs-container">
-                            <div class="form-group" style="margin-bottom:0;">
-                                <label class="form-label">Start Date</label>
-                                <input type="date" class="form-input" id="history-start-date"
-                                    style="color-scheme:dark;">
-                            </div>
-                            <div class="form-group" style="margin-bottom:0;">
-                                <label class="form-label">End Date</label>
-                                <input type="date" class="form-input" id="history-end-date" style="color-scheme:dark;">
-                            </div>
-                        </div>
-                        <button class="btn btn-primary btn-full" onclick="loadCustomerHistory()"
-                            style="margin-top:14px;">
-                            📋 Analyze Date Range
+                        <button class="btn btn-primary" onclick="searchCustomerDetail()"
+                            style="height:46px;min-width:160px;">
+                            🔍 Show Profile
                         </button>
                     </div>
                 </div>
 
-                <!-- ── Rich Per-Customer Detail (shown on exact search) ── -->
-                <div id="customer-detail-panel" style="display:none; margin-top:28px;">
+                <div id="customer-detail-panel" style="display:none;">
 
-                    <!-- Profile Banner -->
                     <div id="customer-profile-banner" class="card"
-                        style="margin-bottom:20px; position:relative; overflow:hidden;">
+                        style="margin-bottom:20px;position:relative;overflow:hidden;">
                         <div
                             style="position:absolute;top:0;right:0;width:300px;height:100%;background:linear-gradient(135deg,transparent,rgba(99,102,241,0.07));pointer-events:none;">
                         </div>
@@ -221,13 +200,17 @@
                         </div>
                     </div>
 
-                    <!-- Charts Row -->
                     <div class="grid-2" style="margin-bottom:20px;">
-                        <div class="chart-container" id="hist-comparison-chart"></div>
-                        <div class="chart-container" id="hist-radar-chart"></div>
+                        <div>
+                            <div class="chart-container" id="hist-comparison-chart"></div>
+                            <div id="hist-bar-insights"></div>
+                        </div>
+                        <div>
+                            <div class="chart-container" id="hist-radar-chart"></div>
+                            <div id="hist-radar-insights"></div>
+                        </div>
                     </div>
 
-                    <!-- All Fields Table -->
                     <div class="card">
                         <div class="card-title">📋 Full Customer Record</div>
                         <div class="table-container">
@@ -243,17 +226,45 @@
                         </div>
                     </div>
                 </div>
+            </section>
 
-                <!-- ── Multi-result table (date range / broad search) ── -->
-                <div id="history-results" style="display:none; margin-top:24px;">
-                    <div class="kpi-grid">
+            <!-- ═══════ BROWSE CHURN DATES ═══════ -->
+            <section id="page-browse" class="page-section">
+                <div class="page-header">
+                    <div class="page-title">📋 Browse by Churn Date</div>
+                    <div class="page-subtitle">Explore and analyse customers who churned within a specific date range
+                    </div>
+                </div>
+
+                <div class="card browse-card" style="margin-bottom:24px;">
+                    <div class="card-title">📆 Select Date Range</div>
+                    <p style="color:var(--text-secondary);font-size:0.88rem;margin-bottom:18px;">Choose a start and end
+                        date to list all customers who churned in that period, along with aggregate statistics.</p>
+                    <div style="display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;">
+                        <div class="form-group" style="flex:1;min-width:160px;margin-bottom:0;">
+                            <label class="form-label">Start Date</label>
+                            <input type="date" class="form-input" id="history-start-date" style="color-scheme:dark;">
+                        </div>
+                        <div class="form-group" style="flex:1;min-width:160px;margin-bottom:0;">
+                            <label class="form-label">End Date</label>
+                            <input type="date" class="form-input" id="history-end-date" style="color-scheme:dark;">
+                        </div>
+                        <button class="btn btn-primary" onclick="loadBrowseHistory()"
+                            style="height:46px;min-width:180px;">
+                            📋 Analyse Date Range
+                        </button>
+                    </div>
+                </div>
+
+                <div id="history-results" style="display:none; margin-top:4px;">
+                    <div class="kpi-grid" style="margin-bottom:24px;">
                         <div class="kpi-card">
                             <div class="kpi-label">📝 Customers Found</div>
                             <div class="kpi-value" id="hist-kpi-found" style="color:var(--accent-blue)">0</div>
                             <span class="kpi-icon">👥</span>
                         </div>
                         <div class="kpi-card">
-                            <div class="kpi-label">💰 Total Value (Spend)</div>
+                            <div class="kpi-label">💰 Total Spend</div>
                             <div class="kpi-value" id="hist-kpi-spend" style="color:var(--accent-green)">$0</div>
                             <span class="kpi-icon">💵</span>
                         </div>
@@ -266,10 +277,10 @@
 
                     <div class="card">
                         <div class="card-title">📋 Customer Details</div>
-                        <div class="table-container" style="max-height: 500px; overflow-y: auto;">
+                        <div class="table-container" style="max-height:500px;overflow-y:auto;">
                             <table id="history-table">
-                                <thead id="history-thead"><!-- Dynamic headers --></thead>
-                                <tbody id="history-tbody"><!-- Dynamic rows --></tbody>
+                                <thead id="history-thead"></thead>
+                                <tbody id="history-tbody"></tbody>
                             </table>
                         </div>
                     </div>
@@ -450,18 +461,16 @@
 
                 <div class="tab-bar">
                     <button class="tab-btn active" onclick="showAnalyticsTab('confusion')">🎯 Confusion Matrix</button>
-                    <button class="tab-btn" onclick="showAnalyticsTab('roc')">📈 ROC Curves</button>
                     <button class="tab-btn" onclick="showAnalyticsTab('metrics')">📊 Performance</button>
                 </div>
 
                 <div id="analytics-confusion" class="analytics-tab">
-                    <div class="grid-2" id="confusion-grid"></div>
-                </div>
-                <div id="analytics-roc" class="analytics-tab" style="display:none;">
-                    <div class="chart-container" id="roc-chart"></div>
+                    <div id="confusion-grid"></div>
+                    <div id="confusion-insights"></div>
                 </div>
                 <div id="analytics-metrics" class="analytics-tab" style="display:none;">
                     <div class="chart-container" id="metrics-chart"></div>
+                    <div id="metrics-insights"></div>
                 </div>
             </section>
 
@@ -474,14 +483,16 @@
                 </div>
 
                 <div class="card" style="margin-bottom:28px;">
-                    <div class="grid-3">
+                    <p style="color:var(--text-secondary);font-size:0.88rem;margin-bottom:22px;">Type in the customer's
+                        details below. Valid ranges are shown next to each label.</p>
+                    <div class="dt-form-grid">
+                        <!-- Left Column -->
                         <div>
-                            <div class="card-title">👤 Customer Profile</div>
+                            <div class="card-title" style="margin-bottom:18px;">👤 Profile &amp; Contract</div>
                             <div class="form-group">
-                                <label class="form-label">Age</label>
-                                <input type="range" id="dt-age" min="18" max="80" value="35"
-                                    oninput="document.getElementById('dtval-age').textContent=this.value">
-                                <span class="range-value" id="dtval-age">35</span>
+                                <label class="form-label">Age <span class="dt-range-hint">18 – 80</span></label>
+                                <input type="number" class="form-input" id="dt-age" min="18" max="80" value="35"
+                                    placeholder="e.g. 35">
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Gender</label>
@@ -491,35 +502,10 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Tenure (months)</label>
-                                <input type="range" id="dt-tenure" min="1" max="60" value="12"
-                                    oninput="document.getElementById('dtval-tenure').textContent=this.value">
-                                <span class="range-value" id="dtval-tenure">12</span>
+                                <label class="form-label">Tenure <span class="dt-range-hint">1 – 60 months</span></label>
+                                <input type="number" class="form-input" id="dt-tenure" min="1" max="60" value="12"
+                                    placeholder="e.g. 12">
                             </div>
-                        </div>
-                        <div>
-                            <div class="card-title">📊 Usage & Support</div>
-                            <div class="form-group">
-                                <label class="form-label">Usage Frequency (times/month)</label>
-                                <input type="range" id="dt-usage" min="1" max="30" value="15"
-                                    oninput="document.getElementById('dtval-usage').textContent=this.value">
-                                <span class="range-value" id="dtval-usage">15</span>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Support Calls</label>
-                                <input type="range" id="dt-support" min="0" max="10" value="2"
-                                    oninput="document.getElementById('dtval-support').textContent=this.value">
-                                <span class="range-value" id="dtval-support">2</span>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Payment Delay (days)</label>
-                                <input type="range" id="dt-delay" min="0" max="30" value="5"
-                                    oninput="document.getElementById('dtval-delay').textContent=this.value">
-                                <span class="range-value" id="dtval-delay">5</span>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="card-title">📋 Subscription</div>
                             <div class="form-group">
                                 <label class="form-label">Subscription Type</label>
                                 <select class="form-select" id="dt-sub">
@@ -528,7 +514,7 @@
                                     <option value="Premium">Premium</option>
                                 </select>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group" style="margin-bottom:0;">
                                 <label class="form-label">Contract Length</label>
                                 <select class="form-select" id="dt-contract">
                                     <option value="Monthly">Monthly</option>
@@ -536,21 +522,39 @@
                                     <option value="Annual">Annual</option>
                                 </select>
                             </div>
+                        </div>
+                        <!-- Right Column -->
+                        <div>
+                            <div class="card-title" style="margin-bottom:18px;">📊 Usage &amp; Financial</div>
                             <div class="form-group">
-                                <label class="form-label">Total Spend ($)</label>
-                                <input type="number" class="form-input" id="dt-spend" value="500" min="100" max="10000"
-                                    step="10">
+                                <label class="form-label">Usage Frequency <span class="dt-range-hint">1 – 30 /month</span></label>
+                                <input type="number" class="form-input" id="dt-usage" min="1" max="30" value="15"
+                                    placeholder="e.g. 15">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Last Interaction (days ago)</label>
-                                <input type="range" id="dt-interaction" min="1" max="30" value="10"
-                                    oninput="document.getElementById('dtval-interaction').textContent=this.value">
-                                <span class="range-value" id="dtval-interaction">10</span>
+                                <label class="form-label">Support Calls <span class="dt-range-hint">0 – 10</span></label>
+                                <input type="number" class="form-input" id="dt-support" min="0" max="10" value="2"
+                                    placeholder="e.g. 2">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Payment Delay <span class="dt-range-hint">0 – 30 days</span></label>
+                                <input type="number" class="form-input" id="dt-delay" min="0" max="30" value="5"
+                                    placeholder="e.g. 5">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Total Spend <span class="dt-range-hint">$100 – $10,000</span></label>
+                                <input type="number" class="form-input" id="dt-spend" value="500" min="100" max="10000"
+                                    step="10" placeholder="e.g. 500">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label class="form-label">Last Interaction <span class="dt-range-hint">1 – 30 days ago</span></label>
+                                <input type="number" class="form-input" id="dt-interaction" min="1" max="30" value="10"
+                                    placeholder="e.g. 10">
                             </div>
                         </div>
                     </div>
-                    <button class="btn btn-primary btn-full" onclick="runDTreePrediction()" style="margin-top:20px;">
-                        🌳 Predict with Decision Tree
+                    <button class="btn btn-primary btn-full" onclick="runDTreePrediction()" style="margin-top:24px;">
+                        🌳 Run Decision Tree Prediction
                     </button>
                 </div>
 
@@ -564,7 +568,7 @@
                     <div class="page-subtitle">Side-by-side comparison of all trained models</div>
                 </div>
 
-                <div class="card" style="margin-bottom:24px;">
+                <div class="card" style="margin-bottom:24px;" id="comparison-plain-table">
                     <div class="card-title">📊 Performance Metrics</div>
                     <div class="table-container">
                         <table>
@@ -583,7 +587,12 @@
                     </div>
                 </div>
 
-                <div class="chart-container" id="radar-chart" style="margin-bottom:24px;"></div>
+                <div class="card" style="margin-bottom:12px;">
+                    <div class="card-title">🎯 Model Scorecard — Performance at a Glance</div>
+                    <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:20px;">Each cell is color-graded: <span style="color:#34d399;">green = best</span>, <span style="color:#fbbf24;">amber = mid</span>, <span style="color:#f87171;">red = lowest</span> for that metric. The mini bar shows the score out of 100%.</p>
+                    <div id="comparison-bar-chart"></div>
+                </div>
+                <div id="comparison-bar-insights" style="margin-bottom:24px;"></div>
 
                 <div class="grid-2" id="model-explanations">
                     <div class="model-card">
@@ -662,44 +671,12 @@
                 </div>
 
                 <div id="shap-results" style="display:none;">
-                    <div class="chart-container" id="shap-chart" style="margin-bottom:24px;"></div>
+                    <div class="chart-container" id="shap-chart" style="margin-bottom:12px;"></div>
+                    <div id="shap-chart-insights" style="margin-bottom:24px;"></div>
                     <div class="card" id="shap-insights"></div>
                 </div>
             </section>
 
-            <!-- MONTHLY TRENDS -->
-            <section id="page-monthly" class="page-section">
-                <div class="page-header">
-                    <div class="page-title">📅 Monthly Churn Trends</div>
-                    <div class="page-subtitle">Analyze churn vs retained customers month by month — select a date range
-                        to explore</div>
-                </div>
-
-                <div class="card" style="margin-bottom:24px;">
-                    <div class="card-title">📆 Select Month Range</div>
-                    <div style="display:flex;gap:20px;align-items:flex-end;flex-wrap:wrap;">
-                        <div class="form-group" style="margin-bottom:0;flex:1;min-width:180px;">
-                            <label class="form-label">From Month</label>
-                            <input type="month" class="form-input" id="monthly-from" style="color-scheme:dark;">
-                        </div>
-                        <div class="form-group" style="margin-bottom:0;flex:1;min-width:180px;">
-                            <label class="form-label">To Month</label>
-                            <input type="month" class="form-input" id="monthly-to" style="color-scheme:dark;">
-                        </div>
-                        <button class="btn btn-primary" onclick="loadMonthlyChurn()"
-                            style="height:46px;min-width:160px;">
-                            📊 Show Trends
-                        </button>
-                    </div>
-                </div>
-
-                <div id="monthly-kpis" style="display:none;" class="grid-4"></div>
-
-                <div id="monthly-results" style="display:none;">
-                    <div class="chart-container" id="monthly-bar-chart" style="margin-bottom:24px;"></div>
-                    <div class="chart-container" id="monthly-rate-chart"></div>
-                </div>
-            </section>
 
         </main>
     </div>
