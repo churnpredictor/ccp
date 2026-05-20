@@ -123,6 +123,11 @@ async function runPrediction() {
         });
         const data = await res.json();
 
+        if (!res.ok) {
+            container.innerHTML = `<div class="result-banner churn"><span class="banner-icon">❌</span> Prediction failed: ${data.error || 'Unknown server error'}</div>`;
+            return;
+        }
+
         // Lock all data fields after prediction
         lockDataFields();
 
@@ -762,7 +767,11 @@ async function runBulkPrediction() {
     try {
         const res = await fetch('/api/bulk-predict', { method: 'POST', body: fd });
         const data = await res.json();
-        if (data.error) throw new Error(data.error);
+        if (!res.ok || data.error) {
+            let msg = data.error || 'Server error';
+            if (data.required_columns) msg += `\n\nRequired columns: ${data.required_columns.join(', ')}`;
+            throw new Error(msg);
+        }
         bulkResults = data;
         renderBulkResults(data);
     } catch (e) {

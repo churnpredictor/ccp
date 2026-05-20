@@ -67,9 +67,23 @@ except FileNotFoundError:
 def preprocess_input(data):
     """Preprocess input data for prediction"""
     df = data.copy()
+
     for column, encoder in encoders.items():
-        if column in df.columns:
-            df[column] = encoder.transform(df[column].astype(str))
+        if column not in df.columns:
+            continue
+        col_str = df[column].astype(str)
+        known = set(encoder.classes_)
+        # Replace unseen labels with the most frequent training class
+        fallback = encoder.classes_[0]
+        df[column] = col_str.apply(lambda v: v if v in known else fallback)
+        df[column] = encoder.transform(df[column])
+
+    # Ensure all required feature columns are present
+    missing = [c for c in feature_columns if c not in df.columns]
+    if missing:
+        raise ValueError(f"CSV is missing required columns: {missing}. "
+                         f"Required: {feature_columns}")
+
     df_scaled = pd.DataFrame(
         scaler.transform(df[feature_columns]),
         columns=feature_columns,
@@ -470,60 +484,69 @@ def dashboard_stats():
 @app.route('/api/predict', methods=['POST'])
 def predict():
     """Single customer prediction with churn reasons"""
-    data = request.json
-
-    raw_values = {
-        'Age': data.get('Age', 35),
-        'Gender': data.get('Gender', 'Male'),
-        'Tenure': data.get('Tenure', 12),
-        'Usage Frequency': data.get('Usage Frequency', 15),
-        'Support Calls': data.get('Support Calls', 2),
-        'Payment Delay': data.get('Payment Delay', 5),
-        'Subscription Type': data.get('Subscription Type', 'Basic'),
-        'Contract Length': data.get('Contract Length', 'Monthly'),
-        'Total Spend': data.get('Total Spend', 500),
-        'Last Interaction': data.get('Last Interaction', 10)
-    }
-
-    input_df = pd.DataFrame({k: [v] for k, v in raw_values.items()})
-    input_processed = preprocess_input(input_df)
-
-    # All model predictions
-    results = {}
-    for name, model in models.items():
-        pred = int(model.predict(input_processed)[0])
-        prob = float(model.predict_proba(input_processed)[0][1])
-        results[name] = {'prediction': pred, 'probability': round(prob, 4)}
-
-    # Primary model (Random Forest)
-    rf = models['Random Forest']
-    prediction = int(rf.predict(input_processed)[0])
-    probability = float(rf.predict_proba(input_processed)[0][1])
-    risk_level = get_risk_level(probability)
-
-    # Feature importance
-    fi = rf.feature_importances_
-    feature_importance = [
-        {'feature': feature_columns[i], 'importance': round(float(fi[i]), 4)}
-        for i in range(len(feature_columns))
-    ]
-    feature_importance.sort(key=lambda x: x['importance'], reverse=True)
-
-    # SHAP reasons
     try:
-        reasons = get_shap_reasons(input_processed, raw_values)
-    except Exception as e:
-        reasons = {'churn_reasons': [], 'stay_reasons': [], 'feature_impacts': [], 'recommendations': [str(e)]}
+        data = request.json
+        if not data:
+            return jsonify({'error': 'No JSON body received'}), 400
 
-    return jsonify({
-        'prediction': prediction,
-        'probability': round(probability, 4),
-        'risk_level': risk_level,
-        'all_models': results,
-        'feature_importance': feature_importance,
-        'reasons': reasons,
-        'customer_data': raw_values
-    })
+        raw_values = {
+            'Age': data.get('Age', 35),
+            'Gender': data.get('Gender', 'Male'),
+            'Tenure': data.get('Tenure', 12),
+            'Usage Frequency': data.get('Usage Frequency', 15),
+            'Support Calls': data.get('Support Calls', 2),
+            'Payment Delay': data.get('Payment Delay', 5),
+            'Subscription Type': data.get('Subscription Type', 'Basic'),
+            'Contract Length': data.get('Contract Length', 'Monthly'),
+            'Total Spend': data.get('Total Spend', 500),
+            'Last Interaction': data.get('Last Interaction', 10)
+        }
+
+        input_df = pd.DataFrame({k: [v] for k, v in raw_values.items()})
+        input_processed = preprocess_input(input_df)
+
+        # All model predictions
+        results = {}
+        for name, model in models.items():
+            pred = int(model.predict(input_processed)[0])
+            prob = float(model.predict_proba(input_processed)[0][1])
+            results[name] = {'prediction': pred, 'probability': round(prob, 4)}
+
+        # Primary model (Random Forest)
+        rf = models['Random Forest']
+        prediction = int(rf.predict(input_processed)[0])
+        probability = float(rf.predict_proba(input_processed)[0][1])
+        risk_level = get_risk_level(probability)
+
+        # Feature importance
+        fi = rf.feature_importances_
+        feature_importance = [
+            {'feature': feature_columns[i], 'importance': round(float(fi[i]), 4)}
+            for i in range(len(feature_columns))
+        ]
+        feature_importance.sort(key=lambda x: x['importance'], reverse=True)
+
+        # SHAP reasons
+        try:
+            reasons = get_shap_reasons(input_processed, raw_values)
+        except Exception as e:
+            print(f"SHAP error (non-fatal): {e}")
+            reasons = {'churn_reasons': [], 'stay_reasons': [], 'feature_impacts': [], 'recommendations': []}
+
+        return jsonify({
+            'prediction': prediction,
+            'probability': round(probability, 4),
+            'risk_level': risk_level,
+            'all_models': results,
+            'feature_importance': feature_importance,
+            'reasons': reasons,
+            'customer_data': raw_values
+        })
+
+    except Exception as e:
+        print(f"Predict error: {e}")
+        import traceback; traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/bulk-predict', methods=['POST'])
@@ -538,6 +561,9 @@ def bulk_predict():
 
     try:
         bulk_data = pd.read_csv(file)
+        if bulk_data.empty:
+            return jsonify({'error': 'Uploaded CSV is empty.'}), 400
+
         original_data = bulk_data.copy()
 
         # Remove ID columns
@@ -546,9 +572,19 @@ def bulk_predict():
                 bulk_data = bulk_data.drop(id_col, axis=1)
                 break
 
-        # Remove Churn if present
-        if 'Churn' in bulk_data.columns:
-            bulk_data = bulk_data.drop('Churn', axis=1)
+        # Remove Churn / Name columns if present
+        for drop_col in ['Churn', 'Customer Name']:
+            if drop_col in bulk_data.columns:
+                bulk_data = bulk_data.drop(drop_col, axis=1)
+
+        # Check required columns before processing
+        missing_cols = [c for c in feature_columns if c not in bulk_data.columns]
+        if missing_cols:
+            return jsonify({
+                'error': f'CSV is missing columns: {missing_cols}',
+                'required_columns': feature_columns,
+                'your_columns': list(bulk_data.columns)
+            }), 400
 
         processed = preprocess_input(bulk_data)
         rf = models['Random Forest']
@@ -592,6 +628,8 @@ def bulk_predict():
         })
 
     except Exception as e:
+        print(f"Bulk predict error: {e}")
+        import traceback; traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 
