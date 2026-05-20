@@ -1,4 +1,4 @@
-# 📊 Dataset & Application Gallery
+<img width="1918" height="975" alt="image" src="https://github.com/user-attachments/assets/b8f54bb5-8b1f-48c7-a281-1057b0dfae69" /># 📊 Dataset & Application Gallery
 
 ---
 
@@ -23,20 +23,29 @@ The dataset used in this project is sourced from Kaggle and contains **440,833 c
 
 ### 1. 📊 Dashboard — Overview & KPIs
 
-The main dashboard displays live KPIs: total customers, active vs. churned counts, overall churn rate, and a model performance comparison table.
+The main dashboard displays live KPIs: total customers, active vs. churned counts, overall churn rate
 
-<img width="1917" height="969" alt="Screenshot 2026-05-19 160108" src="https://github.com/user-attachments/assets/443264fc-bb20-40a2-9f02-0402c0f747bb" />
+<img width="1919" height="920" alt="image" src="https://github.com/user-attachments/assets/9b5f8d85-181b-4792-82d2-e1cf79045b48" />
 
-<img width="1910" height="922" alt="Screenshot 2026-05-19 160134" src="https://github.com/user-attachments/assets/03363879-93e3-4556-af9e-970f2c2747c4" />
 
 ---
 
 ### 2. 👥 Customer History & Search
 
-Search and browse churned customer records. Filter by date range or search by Customer ID / Name to retrieve full profiles.
+Search and browse churned customer records. Filter by
+1.Date range
+<img width="1905" height="974" alt="image" src="https://github.com/user-attachments/assets/eef0bd58-1d0a-4738-85fd-63d6517d5486" />
+<img width="1919" height="910" alt="image" src="https://github.com/user-attachments/assets/a68e6b2d-53d3-42c0-9d67-be2f5077f57a" />
 
-<img width="1919" height="963" alt="Screenshot 2026-05-19 160201" src="https://github.com/user-attachments/assets/a31bb867-ed15-4375-8634-fa2c873189fa" />
-<img width="1919" height="958" alt="Screenshot 2026-05-19 160332" src="https://github.com/user-attachments/assets/5a9a6b01-7db1-46cc-85f5-6e2a86cb609f" />
+
+
+2.Search by Customer ID / Name to retrieve full profiles.
+
+<img width="1911" height="955" alt="image" src="https://github.com/user-attachments/assets/58b64759-29ce-4980-85be-2209dfa5c9cb" />
+<img width="1919" height="921" alt="image" src="https://github.com/user-attachments/assets/56458975-1bba-45c5-8732-b70686b98efe" />
+<img width="1919" height="968" alt="image" src="https://github.com/user-attachments/assets/0a1708c5-314e-4a47-b003-7712323e720b" />
+
+
 
 
 
@@ -45,10 +54,11 @@ Search and browse churned customer records. Filter by date range or search by Cu
 ### 3. 🔮 Single Prediction
 
 Enter individual customer details to get a real-time churn probability score, risk level classification, and SHAP-powered explainability reasons.
-<img width="1919" height="976" alt="Screenshot 2026-05-19 160229" src="https://github.com/user-attachments/assets/914dad31-71ad-41da-8042-201db583cbc4" />
-<img width="1918" height="915" alt="Screenshot 2026-05-19 160504" src="https://github.com/user-attachments/assets/195e2daa-d01a-4b75-a2d7-c9654326db71" />
+<img width="1916" height="1044" alt="image" src="https://github.com/user-attachments/assets/6705dea4-93fd-4134-a3c1-bac8f2a16780" />
 
+<img width="1919" height="1011" alt="image" src="https://github.com/user-attachments/assets/5430580e-c5bd-4064-a570-683d02a86d7d" />
 
+<img width="1919" height="1042" alt="image" src="https://github.com/user-attachments/assets/c5d3be2b-c8e3-4364-a618-57bd8cef53f8" />
 
 ---
 
@@ -56,16 +66,22 @@ Enter individual customer details to get a real-time churn probability score, ri
 
 Upload a CSV file to run batch predictions across hundreds or thousands of customers at once, with cohort risk distribution charts.
 
-<img width="1919" height="962" alt="Screenshot 2026-05-19 160814" src="https://github.com/user-attachments/assets/6177f1ab-4d24-4a08-9fe3-f383bc35f588" />
-
-<img width="1919" height="970" alt="Screenshot 2026-05-19 160900" src="https://github.com/user-attachments/assets/133c38e1-ffa8-4a91-88ca-314176a775b1" />
+<img width="1919" height="986" alt="image" src="https://github.com/user-attachments/assets/c39729d6-2a59-42e7-a6b1-4d453c1258c7" />
+<img width="1919" height="996" alt="image" src="https://github.com/user-attachments/assets/b14016d6-d5fc-416f-8324-8176b89cc1b6" />
+<img width="1919" height="1013" alt="image" src="https://github.com/user-attachments/assets/6217668a-11fd-40bf-8047-20bfb9ae8fcd" />
 
 ---
 
 ### 5. 📈 Model Analytics
 
-Deep-dive into ML model performance metrics — interactive ROC curves, confusion matrices, and feature importance rankings for all 4 trained models.
-<img width="1919" height="923" alt="Screenshot 2026-05-19 160951" src="https://github.com/user-attachments/assets/9937309e-db02-4ab8-8806-dd076cfb8e7a" />
+Deep-dive into ML model performance metrics —  confusion matrices, and feature importance rankings for all 4 trained models.
+1.Confusion matrices
+<img width="1919" height="990" alt="image" src="https://github.com/user-attachments/assets/5b2eafd1-e6a6-4f99-971d-82f77a913e06" />
+<img width="1919" height="917" alt="image" src="https://github.com/user-attachments/assets/700334b0-8333-4b94-8809-72467de9304c" />
+<img width="1918" height="975" alt="image" src="https://github.com/user-attachments/assets/acef0e2a-ec83-4463-b6ca-9ed100fb0c06" />
+<img width="1919" height="911" alt="image" src="https://github.com/user-attachments/assets/ba608a0f-f884-44ea-a36f-e80e08662270" />
+2.Perfomance
+<img width="1919" height="949" alt="image" src="https://github.com/user-attachments/assets/8778b461-bad6-4bd3-b63b-6fd44806a218" />
 
 
 ---
@@ -85,7 +101,10 @@ View SHAP (SHapley Additive exPlanations) feature importance values for Random F
 
 Visualise exactly how the Decision Tree model makes its churn decision, step-by-step — with interactive sliders for each customer feature.
 
-<img width="1919" height="931" alt="Screenshot 2026-05-19 161017" src="https://github.com/user-attachments/assets/9e76a743-a210-41a8-906a-238922f7ef2a" />
+<img width="1914" height="970" alt="image" src="https://github.com/user-attachments/assets/bbdd3b80-c817-47f1-af35-26e93e8a20a2" />
+<img width="1911" height="884" alt="image" src="https://github.com/user-attachments/assets/8545ba41-fa61-4017-bc4c-40d43117b69b" />
+<img width="1919" height="955" alt="image" src="https://github.com/user-attachments/assets/8161d818-c46f-49c6-880c-44bbc3c2fbc0" />
+<img width="1919" height="941" alt="image" src="https://github.com/user-attachments/assets/68481c19-4fe4-42c6-a20a-8fa4a272d1c3" />
 
 
 ---
@@ -94,26 +113,13 @@ Visualise exactly how the Decision Tree model makes its churn decision, step-by-
 
 Side-by-side comparison of all 4 trained models using a radar chart spanning Accuracy, Precision, Recall, F1 Score, and AUC — plus individual model detail cards.
 
-<img width="1919" height="1003" alt="image" src="https://github.com/user-attachments/assets/49951264-2a24-4a2a-b97e-daa3e2090b2a" />
-<img width="1919" height="982" alt="image" src="https://github.com/user-attachments/assets/a931c4c5-0ed9-4dd4-9320-71803b32519d" />
-<img width="1919" height="958" alt="image" src="https://github.com/user-attachments/assets/54405d6c-f104-4969-a772-05752d02db21" />
+<img width="1919" height="933" alt="image" src="https://github.com/user-attachments/assets/8fd7b8c4-9f5b-463e-afd5-bf1fa77f61a5" />
 
-
-
----
-
-### 9. 📅 Monthly Trends
-
-Month-wise churn trend analysis from 2021 to 2026 — stacked bar charts showing churned vs. retained customers per month, plus a churn rate trend line.
-
-<img width="1919" height="959" alt="image" src="https://github.com/user-attachments/assets/d88e5cef-0d82-42d5-b36b-1e22ae54f398" />
-<img width="1919" height="987" alt="image" src="https://github.com/user-attachments/assets/cd87e5a8-a10d-4cc9-9cc2-d7030012144e" />
-<img width="1910" height="963" alt="image" src="https://github.com/user-attachments/assets/1a53e075-26fa-46d9-8e71-40f7ca6942c8" />
-
-
+<img width="1919" height="901" alt="image" src="https://github.com/user-attachments/assets/ea979231-03b2-4095-80a1-166106c85250" />
 
 
 ---
+
 
 <div align="center">
   <b>Dataset by Muhammad Shahid Azeem on Kaggle</b><br>
