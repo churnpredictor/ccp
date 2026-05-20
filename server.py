@@ -29,7 +29,7 @@ feature_columns = joblib.load('models/feature_columns.pkl')
 evaluation_results = joblib.load('models/evaluation_results.pkl')
 roc_data = joblib.load('models/roc_data.pkl')
 test_data = joblib.load('models/test_data.pkl')
-print("✓ All models loaded successfully!")
+print("[OK] All models loaded successfully!")
 
 # Load dataset info globally so we don't reload on every request
 try:
@@ -58,10 +58,10 @@ try:
         churn_dates.loc[churn_mask] = start_date + pd.to_timedelta(random_days, unit='D')
         dataset['Churn Date'] = churn_dates.dt.date
 
-    print(f"✓ Dataset loaded: {len(dataset):,} records with mock demographics")
+    print(f"[OK] Dataset loaded: {len(dataset):,} records with mock demographics")
 except FileNotFoundError:
     dataset = None
-    print("⚠ Dataset not found for stats")
+    print("[WARN] Dataset not found for stats")
 
 
 def preprocess_input(data):
@@ -834,7 +834,7 @@ def download_csv():
 
 if __name__ == '__main__':
     print("\n" + "=" * 60)
-    print("  🎯 Smart Churn Predictor — Flask Server")
-    print("  📍 Open: http://localhost:5000")
+    print("  Smart Churn Predictor - Flask Server")
+    print("  Open: http://localhost:5000")
     print("=" * 60 + "\n")
     app.run(debug=True, port=5000)
