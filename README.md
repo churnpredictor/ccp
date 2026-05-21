@@ -169,7 +169,7 @@ pie title Model Usage & Performance
 
 ## ☁️ Deployment
 
-The application is deployed on **[Render](https://render.com/)** as a free-tier web service.
+The application is deployed on **[Render](https://render.com/)** as a web service.
 
 ### Deployment Stack
 | Component | Detail |
