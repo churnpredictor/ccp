@@ -31,6 +31,17 @@ roc_data = joblib.load('models/roc_data.pkl')
 test_data = joblib.load('models/test_data.pkl')
 print("[OK] All models loaded successfully!")
 
+# Pre-load SHAP explainers once at startup to avoid per-request memory spikes
+print("Initializing SHAP explainers...")
+try:
+    shap_explainer_rf = shap.TreeExplainer(models['Random Forest'])
+    shap_explainer_xgb = shap.TreeExplainer(models['XGBoost'])
+    print("[OK] SHAP explainers ready!")
+except Exception as e:
+    shap_explainer_rf = None
+    shap_explainer_xgb = None
+    print(f"[WARN] SHAP explainer init failed: {e}")
+
 # Load dataset info globally so we don't reload on every request
 try:
     dataset = pd.read_csv('data/customer_churn_dataset-training-master.csv')
@@ -165,9 +176,9 @@ def build_tree_viz(dt_model, feature_cols, path_set):
 
 def get_shap_reasons(input_processed, raw_values):
     """Generate SHAP-based churn reasons for a single prediction"""
-    rf_model = models['Random Forest']
-    explainer = shap.TreeExplainer(rf_model)
-    shap_vals = explainer.shap_values(input_processed)
+    if shap_explainer_rf is None:
+        raise RuntimeError("SHAP explainer not available")
+    shap_vals = shap_explainer_rf.shap_values(input_processed)
 
     # Handle different SHAP output formats
     if isinstance(shap_vals, list):
@@ -671,32 +682,45 @@ def model_analytics():
 
 @app.route('/api/explainability')
 def explainability():
-    """Return SHAP feature importance"""
-    X_test = test_data['X_test']
-    sample = X_test.iloc[:min(500, len(X_test))]
+    """Return SHAP feature importance using pre-loaded explainers"""
+    try:
+        X_test = test_data['X_test']
+        # Use small sample to stay within memory limits on free hosting
+        sample = X_test.iloc[:min(100, len(X_test))]
 
-    result = {}
-    for model_name in ['Random Forest', 'XGBoost']:
-        model = models[model_name]
-        explainer = shap.TreeExplainer(model)
-        shap_vals = explainer.shap_values(sample)
+        explainers = {
+            'Random Forest': shap_explainer_rf,
+            'XGBoost': shap_explainer_xgb
+        }
 
-        if isinstance(shap_vals, list):
-            sv = shap_vals[1]
-        elif isinstance(shap_vals, np.ndarray) and len(shap_vals.shape) == 3:
-            sv = shap_vals[:, :, 1]  # Class 1 (churn) SHAP values
-        else:
-            sv = shap_vals
+        result = {}
+        for model_name, explainer in explainers.items():
+            if explainer is None:
+                result[model_name] = []
+                continue
 
-        mean_abs = np.abs(sv).mean(axis=0)
-        importance = [
-            {'feature': feature_columns[i], 'importance': round(float(mean_abs[i]), 4)}
-            for i in range(len(feature_columns))
-        ]
-        importance.sort(key=lambda x: x['importance'], reverse=True)
-        result[model_name] = importance
+            shap_vals = explainer.shap_values(sample)
 
-    return jsonify(result)
+            if isinstance(shap_vals, list):
+                sv = shap_vals[1]
+            elif isinstance(shap_vals, np.ndarray) and len(shap_vals.shape) == 3:
+                sv = shap_vals[:, :, 1]
+            else:
+                sv = shap_vals
+
+            mean_abs = np.abs(sv).mean(axis=0)
+            importance = [
+                {'feature': feature_columns[i], 'importance': round(float(mean_abs[i]), 4)}
+                for i in range(len(feature_columns))
+            ]
+            importance.sort(key=lambda x: x['importance'], reverse=True)
+            result[model_name] = importance
+
+        return jsonify(result)
+    except Exception as e:
+        print(f"Explainability error: {e}")
+        import traceback; traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/decision-tree', methods=['POST'])
