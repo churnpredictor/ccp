@@ -130,6 +130,68 @@ pie title Model Usage & Performance
 
 ---
 
+## 🛠️ Tech Stack
+
+### Backend
+| Technology | Version | Purpose |
+|---|---|---|
+| Python | 3.11 | Core runtime |
+| Flask | 3.0.3 | Web framework & REST API |
+| Gunicorn | 22.0.0 | WSGI production server |
+
+### Machine Learning & Data Science
+| Technology | Version | Purpose |
+|---|---|---|
+| scikit-learn | 1.5.0 | ML models (Logistic Regression, Decision Tree, Random Forest) |
+| XGBoost | 2.0.3 | Gradient boosting model |
+| SHAP | 0.45.1 | Explainable AI — feature impact explanations |
+| pandas | 2.2.2 | Data manipulation & CSV processing |
+| NumPy | 1.26.4 | Numerical computation |
+| joblib | 1.4.2 | Model serialization (`.pkl` files) |
+
+### Visualization & Reporting
+| Technology | Version | Purpose |
+|---|---|---|
+| Plotly | 5.22.0 | Interactive charts (ROC curves, confusion matrices, gauge charts) |
+| Matplotlib | 3.9.0 | Static plot generation |
+| Seaborn | 0.13.2 | Statistical visualizations |
+| ReportLab | 4.2.2 | PDF report generation |
+| Kaleido | 0.2.1 | Plotly static image export |
+
+### Frontend
+| Technology | Purpose |
+|---|---|
+| HTML5 / CSS3 | Structure & styling |
+| Vanilla JavaScript | Client-side interactivity & API calls |
+| Plotly.js | In-browser interactive charts |
+
+---
+
+## ☁️ Deployment
+
+The application is deployed on **[Render](https://render.com/)** as a free-tier web service.
+
+### Deployment Stack
+| Component | Detail |
+|---|---|
+| Platform | Render (free tier) |
+| Runtime | Python 3.11.9 |
+| WSGI Server | Gunicorn (`--workers 1 --timeout 120 --preload`) |
+| Config file | `render.yaml` |
+
+### How it Works
+- Render reads `render.yaml` to configure the service automatically.
+- On each deploy, it runs `pip install -r requirements.txt` to install dependencies.
+- Gunicorn serves the Flask app with `--preload` so SHAP explainers are loaded once at startup (prevents out-of-memory errors on Render's free plan).
+
+### Deploy Your Own Instance
+1. Fork this repository.
+2. Create a new **Web Service** on [Render](https://render.com/) and connect your fork.
+3. Render will auto-detect `render.yaml` — no manual configuration needed.
+4. Click **Deploy** and your instance will be live within minutes.
+
+---
+
 ## 💻 Installation & Usage
 
 ### Prerequisites
