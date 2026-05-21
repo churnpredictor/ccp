@@ -174,7 +174,7 @@ The application is deployed on **[Render](https://render.com/)** as a free-tier 
 ### Deployment Stack
 | Component | Detail |
 |---|---|
-| Platform | Render (free tier) |
+| Platform | Render  |
 | Runtime | Python 3.11.9 |
 | WSGI Server | Gunicorn (`--workers 1 --timeout 120 --preload`) |
 | Config file | `render.yaml` |
